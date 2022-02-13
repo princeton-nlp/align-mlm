@@ -9,7 +9,6 @@ from tqdm import tqdm
 from datasets import concatenate_datasets
 from copy import deepcopy
 import random
-import pdb
 
 def create_modified_dataset(data_args, map_function, datasets):
     # # Create new dataset using map function
@@ -33,16 +32,6 @@ def create_modified_dataset(data_args, map_function, datasets):
             batched=True,
             num_proc=data_args.preprocessing_num_workers
         )
-
-    # pdb.set_trace()
-    # # just a test
-    # asdf = {}
-    # asdf['input_ids'] = modified_dataset['train']['input_ids'][0]
-    # asdf['attention_mask'] = modified_dataset['train']['attention_mask'][0]
-    # asdf['special_tokens_mask'] = modified_dataset['train']['special_tokens_mask'][0]
-
-    # nice_stuff = modified_dataset['train'].add_item(asdf)
-    # pdb.set_trace()
     
     # Step 3: Check if a modified dataset needs to be ADDED or if it should be REPLACED
     if data_args.word_modification == 'add':

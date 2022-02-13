@@ -74,10 +74,7 @@ class RobertaEmbeddings(nn.Module):
         super().__init__()
         self.word_embeddings = nn.Embedding(config.vocab_size, config.hidden_size, padding_idx=config.pad_token_id)
         self.position_embeddings = nn.Embedding(config.max_position_embeddings, config.hidden_size)
-
-        # TODO: Must fix this
-        # self.token_type_embeddings = nn.Embedding(config.type_vocab_size, config.hidden_size)
-        self.token_type_embeddings = nn.Embedding(2, config.hidden_size)
+        self.token_type_embeddings = nn.Embedding(config.type_vocab_size, config.hidden_size)
 
         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be able to load
         # any TensorFlow checkpoint file
@@ -95,10 +92,6 @@ class RobertaEmbeddings(nn.Module):
         )
 
     def forward(self, input_ids=None, token_type_ids=None, position_ids=None, inputs_embeds=None):
-        pdb.set_trace()
-        print(token_type_ids)
-        print(position_ids)
-        # pdb.set_trace()
         if position_ids is None:
             if input_ids is not None:
                 # Create the position ids from the input token ids. Any padded tokens remain padded.
@@ -117,7 +110,6 @@ class RobertaEmbeddings(nn.Module):
         if position_ids is None:
             position_ids = self.position_ids[:, :seq_length]
 
-        # print("token ids")
         if token_type_ids is None:
             token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=self.position_ids.device)
 
@@ -613,7 +605,6 @@ class RobertaModel(RobertaPreTrainedModel):
     # Copied from transformers.models.bert.modeling_bert.BertModel.__init__ with Bert->Roberta
     def __init__(self, config, add_pooling_layer=True):
         super().__init__(config)
-        # pdb.set_trace()
         self.config = config
 
         self.embeddings = RobertaEmbeddings(config)
@@ -1365,7 +1356,6 @@ class RobertaForQuestionAnswering(RobertaPreTrainedModel):
             attentions=outputs.attentions,
         )
 
-import pdb;
 
 def create_position_ids_from_input_ids(input_ids, padding_idx):
     """

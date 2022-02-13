@@ -45,8 +45,6 @@ from .integrations import (  # isort: split
     run_hp_search_ray,
 )
 
-import pdb
-
 import numpy as np
 import torch
 from packaging import version
@@ -431,7 +429,6 @@ class TrainerWordModifications:
             raise ValueError("Trainer: training requires a train_dataset.")
         train_sampler = self._get_train_sampler()
 
-        # pdb.set_trace()
         return DataLoader(
             self.train_dataset,
             batch_size=self.args.train_batch_size,
@@ -802,7 +799,6 @@ class TrainerWordModifications:
             self.control = self.callback_handler.on_epoch_begin(self.args, self.state, self.control)
 
             for step, inputs in enumerate(epoch_iterator):
-                # pdb.set_trace()
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
@@ -1159,7 +1155,6 @@ class TrainerWordModifications:
         # if self.data_args.permute_vocabulary:
         #     inputs = self.word_based_modifications.modify_inputs_permute(inputs)
 
-        # pdb.set_trace()
         inputs = self._prepare_inputs(inputs)
 
         if self.use_amp:
@@ -1191,7 +1186,6 @@ class TrainerWordModifications:
         Subclass and override for custom behavior.
         """
         outputs = model(**inputs)
-        # pdb.set_trace()
         # Save past state if it exists
         # TODO: this needs to be fixed and made cleaner later.
         if self.args.past_index >= 0:

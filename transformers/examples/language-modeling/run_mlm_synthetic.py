@@ -28,7 +28,6 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from datasets import load_dataset
-import pdb
 import transformers
 from transformers import (
     CONFIG_MAPPING,
@@ -399,9 +398,6 @@ def main():
         def tokenize_function(examples):
             return tokenizer(examples[text_column_name], return_special_tokens_mask=True)
 
-        # pdb.set_trace()
-        # datasets & tokenized_datasets is a DatasetDict
-        # <class 'datasets.dataset_dict.DatasetDict'>
         tokenized_datasets = datasets.map(
             tokenize_function,
             batched=True,
@@ -436,8 +432,6 @@ def main():
             }
             return result
 
-        # pdb.set_trace()
-
         # Note that with `batched=True`, this map processes 1,000 texts together, so group_texts throws away a
         # remainder for each of those groups of 1,000 texts. You can adjust that batch_size here but a higher value
         # might be slower to preprocess.
@@ -451,35 +445,7 @@ def main():
             load_from_cache_file=not data_args.overwrite_cache,
         )
 
-    # tokenized datasets has become a dict after this point
-    # Train and test are of type <class 'datasets.arrow_dataset.Dataset'>
-    # BEFORE ->
-    # DatasetDict({
-    #     train: Dataset({
-    #         features: ['input_ids', 'attention_mask', 'special_tokens_mask'],
-    #         num_rows: 4
-    #     })
-    #     validation: Dataset({
-    #         features: ['input_ids', 'attention_mask', 'special_tokens_mask'],
-    #         num_rows: 1
-    #     })
-    # })
-
-    # AFTER ->
-    # {'train': Dataset({
-    #     features: ['input_ids', 'attention_mask', 'special_tokens_mask'],
-    #     num_rows: 8
-    # }), 'validation': Dataset({
-    #     features: ['input_ids', 'attention_mask', 'special_tokens_mask'],
-    #     num_rows: 2
-    # })}
-
-    # tokenized_datasets["train"]['input_ids'] -> list of size (1, 512)
-
-    # DataTrainingArguments(dataset_name=None, dataset_config_name=None, train_file='data/train.txt', validation_file='data/valid.txt', data_cache_dir=None, overwrite_cache=False, validation_split_percentage=5, max_seq_length=512, preprocessing_num_workers=None, mlm_probability=0.15, line_by_line=False, pad_to_max_length=False, permute_vocabulary=False, vocab_permutation_file=None, word_modification='add', modify_words=False, modify_words_probability=0.15, modify_words_range='100-50000', invert_word_order=True, one_to_one_mapping=False, one_to_one_file=None, shift_special=False, permute_words=False, target_dataset_ratio=None)
-    #TrainingArguments(output_dir=data/output_dir, overwrite_output_dir=True, do_train=True, do_eval=True, do_predict=False, model_parallel=False, evaluation_strategy=EvaluationStrategy.NO, prediction_loss_only=False, per_device_train_batch_size=16, per_device_eval_batch_size=16, gradient_accumulation_steps=1, eval_accumulation_steps=None, learning_rate=0.0001, weight_decay=0.0, adam_beta1=0.9, adam_beta2=0.999, adam_epsilon=1e-08, max_grad_norm=1.0, num_train_epochs=3.0, max_steps=5000, warmup_steps=1000, logging_dir=runs/Feb06_00-38-27_adroit5, logging_first_step=False, logging_steps=50, save_steps=-1, save_total_limit=None, no_cuda=False, seed=42, fp16=False, fp16_opt_level=O1, local_rank=-1, tpu_num_cores=None, tpu_metrics_debug=False, debug=False, dataloader_drop_last=False, eval_steps=50, dataloader_num_workers=0, past_index=-1, run_name=adroit_test, disable_tqdm=False, remove_unused_columns=True, label_names=None, load_best_model_at_end=False, metric_for_best_model=None, greater_is_better=None, ignore_data_skip=False, fp16_backend=auto, sharded_ddp=False)
     # Make synthetic language modifications if necessary
-    # pdb.set_trace()
     tokenized_datasets = modify_inputs_synthetic(data_args, training_args, tokenized_datasets, tokenizer=tokenizer)
 
     # Data collator
