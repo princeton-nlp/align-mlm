@@ -46,8 +46,8 @@ from transformers import (
 from transformers.trainer_utils import is_main_process
 
 # Synthetic languages
-from transformers import modify_inputs_synthetic
-from transformers.synthetic_utils import modify_config
+from transformers.synthetic_utils_tlm import modify_inputs_synthetic
+from transformers.synthetic_utils_tlm import modify_config
 
 logger = logging.getLogger(__name__)
 MODEL_CONFIG_CLASSES = list(MODEL_FOR_MASKED_LM_MAPPING.keys())

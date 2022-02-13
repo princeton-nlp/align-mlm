@@ -3,3 +3,4 @@
 *wandb*
 *.log
 api.md
+/data
