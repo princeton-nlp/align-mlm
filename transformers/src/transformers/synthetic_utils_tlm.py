@@ -11,12 +11,78 @@ from copy import deepcopy
 import random
 import pdb
 from datasets import DatasetDict
+import time
 
 def create_position_ids_from_input_ids(input_ids, padding_idx):
     an_array = np.array(input_ids)
     mask = np.not_equal(an_array, padding_idx)
     incremental_indices = np.cumsum(mask, axis=1) * mask
     return (incremental_indices.astype(int) + padding_idx).tolist()
+        
+def split_inputs(examples):
+    half_length = len(examples['input_ids'][0])//2
+    num_sentences = len(examples['input_ids'])
+
+    examples1 = {}
+    examples2 = {}
+    for key in examples.keys():
+        if key != 'tlm_data':
+            examples1[key] = [deepcopy(examples[key][j][:half_length]) for j in range(num_sentences)]
+            examples2[key] = [deepcopy(examples[key][j][half_length:]) for j in range(num_sentences)]
+
+    orig_examples1 = deepcopy(examples1)
+    orig_examples2 = deepcopy(examples2)
+
+    examples1['token_type_ids'] = [[1]*half_length for i in range(num_sentences)]
+    examples2['token_type_ids'] = [[1]*half_length for i in range(num_sentences)]
+
+    return orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences
+
+def merge_inputs(orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer):
+    syn_examples1 = deepcopy(examples1)
+    syn_examples2 = deepcopy(examples2)
+
+    for key in examples1.keys():
+        for j in range(num_sentences):
+            # if key == 'token_type_ids':
+            #     print(syn_examples1['token_type_ids'][0])
+            #     print(syn_examples1['token_type_ids'][1])
+            syn_examples1[key][j] += deepcopy(syn_examples2[key][j])
+
+    syn_examples1['position_ids'] = create_position_ids_from_input_ids(syn_examples1['input_ids'], tokenizer.pad_token_id)
+    syn_examples1["tlm_data"] = [[0] for i in range(len(syn_examples1['input_ids']))]
+
+    # print(orig_examples1['input_ids'][0][:10])
+    for key in examples1.keys():
+        for j in range(num_sentences):
+            orig_examples1[key][j] += deepcopy(examples1[key][j])
+            orig_examples2[key][j] += deepcopy(examples2[key][j])
+
+    # print(orig_examples1['input_ids'][0][:10])
+    # print(len(orig_examples1['input_ids']), len(orig_examples1['input_ids'][0]))
+
+    for key in orig_examples1.keys():
+        orig_examples1[key] += deepcopy(orig_examples2[key])
+    
+    orig_examples1["tlm_data"] = [[1] for i in range(len(orig_examples1['input_ids']))]
+    
+    # print(syn_examples1['tlm_data'])
+    # print(orig_examples1['tlm_data'])
+
+    for key in syn_examples1.keys():
+        syn_examples1[key] += deepcopy(orig_examples1[key])
+
+    # print(syn_examples1['tlm_data'])
+    # print(len(orig_examples1['input_ids']), len(orig_examples1['input_ids'][0]), len(syn_examples1['input_ids']), len(syn_examples1['input_ids'][0]))
+    
+    # print(syn_examples1)
+    # for key in syn_examples1.keys():
+    #     print(key)
+    #     for i in range(len(syn_examples1[key])):
+    #         print(len(syn_examples1[key][i]))
+    #     print()
+
+    return syn_examples1
 
 def create_modified_dataset(data_args, map_function, datasets, pad_token_id = 1):
     # # Create new dataset using map function
@@ -34,25 +100,26 @@ def create_modified_dataset(data_args, map_function, datasets, pad_token_id = 1)
         for key in datasets.keys():
             datasets[key] = datasets[key].add_column(
                 "token_type_ids",
-                [[0] * len(datasets[key]['input_ids'][0])] * len(datasets[key]['input_ids'])
+                [[0] * len(datasets[key]['input_ids'][0]) for i in range(len(datasets[key]['input_ids']))]
             )
             datasets[key] = datasets[key].add_column(
                 "position_ids",
                 create_position_ids_from_input_ids(datasets[key]['input_ids'], pad_token_id)
             )
+            datasets[key] = datasets[key].add_column("tlm_data", [[0] for i in range(len(datasets[key]['input_ids']))])
     else:
         datasets.add_column(
             "token_type_ids",
-            [[0] * len(datasets['input_ids'][0])] * len(datasets['input_ids'])
+            [[0] * len(datasets['input_ids'][0]) for i in range(len(datasets['input_ids']))]
         )
         datasets.add_column(
             "position_ids",
             create_position_ids_from_input_ids(datasets['input_ids'], pad_token_id)
         )
-    
-    # pdb.set_trace()
+        datasets = datasets.add_column("tlm_data", [[0] for i in range(len(datasets['input_ids']))])
 
-    if type(datasets) is dict:
+    
+    if type(datasets) is dict or (type(datasets) is DatasetDict):
         modified_dataset = {}
         for key in datasets.keys():
             modified_dataset[key] = datasets[key].map(
@@ -66,18 +133,6 @@ def create_modified_dataset(data_args, map_function, datasets, pad_token_id = 1)
             batched=True,
             num_proc=data_args.preprocessing_num_workers
         )
-    
-    # pdb.set_trace()
-
-    # pdb.set_trace()
-    # # just a test
-    # asdf = {}
-    # asdf['input_ids'] = modified_dataset['train']['input_ids'][0]
-    # asdf['attention_mask'] = modified_dataset['train']['attention_mask'][0]
-    # asdf['special_tokens_mask'] = modified_dataset['train']['special_tokens_mask'][0]
-
-    # nice_stuff = modified_dataset['train'].add_item(asdf)
-    # pdb.set_trace()
     
     # Step 3: Check if a modified dataset needs to be ADDED or if it should be REPLACED
     if data_args.word_modification == 'add':
@@ -324,7 +379,6 @@ def modify_inputs_one_to_one_mapping(data_args, training_args, datasets, task_na
 
     # Vocabulary size
     vocab_size = tokenizer.vocab_size
-
     # If we are replacing only a fraction of the words, create a list
     # We use the same variable data_args.modify_words_probability here
     if data_args.one_to_one_file is not None:
@@ -332,15 +386,28 @@ def modify_inputs_one_to_one_mapping(data_args, training_args, datasets, task_na
 
         # Step 1: Create map function for modification
         def map_function(examples):
-            for j in range(len(examples['input_ids'])):
-                examples['input_ids'][j] = [examples['input_ids'][j][i] if (examples['input_ids'][j][i] in special_tokens or examples['input_ids'][j][i] in dont_modify) else (examples['input_ids'][j][i] + vocab_size)  for i in range(len(examples['input_ids'][j]))]
-            return examples
+            orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences = split_inputs(examples)
+
+            def one_to_one_mapping(data):
+                for j in range(len(data['input_ids'])):
+                    data['input_ids'][j] = [data['input_ids'][j][i] if (data['input_ids'][j][i] in special_tokens or data['input_ids'][j][i] in dont_modify) else (data['input_ids'][j][i] + vocab_size)  for i in range(len(data['input_ids'][j]))]
+
+            one_to_one_mapping(examples1)
+            one_to_one_mapping(examples2)
+
+            return merge_inputs(orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer)
     else:
         # Step 1: Create map function for modification
         def map_function(examples):
-            for j in range(len(examples['input_ids'])):
-                examples['input_ids'][j] = [examples['input_ids'][j][i] if (examples['input_ids'][j][i] in special_tokens) else (examples['input_ids'][j][i] + vocab_size)  for i in range(len(examples['input_ids'][j]))]
-            return examples
+            orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences = split_inputs(examples)
+
+            def one_to_one_mapping(data):
+                for j in range(len(data['input_ids'])):
+                    data['input_ids'][j] = [data['input_ids'][j][i] if (data['input_ids'][j][i] in special_tokens) else (data['input_ids'][j][i] + vocab_size)  for i in range(len(data['input_ids'][j]))]
+
+            one_to_one_mapping(examples1)
+            one_to_one_mapping(examples2)
+            return merge_inputs(orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer)
 
 
     # Step 2: Return modified dataset
@@ -348,6 +415,8 @@ def modify_inputs_one_to_one_mapping(data_args, training_args, datasets, task_na
 
 
 # Permutation
+# Need to decide how to do TLM using this particular model
+# i.e. Do we perform permutation on half of the sentence, or the full sentence together at once?
 def modify_inputs_permute_sentence(data_args, training_args, datasets, task_name, tokenizer=None, negative_label=None):
     # Check the arguments
     assert data_args.word_modification == 'add' or data_args.word_modification == 'replace', "Illegal option for argument word_modification"
@@ -398,21 +467,9 @@ def modify_inputs_permute_sentence(data_args, training_args, datasets, task_name
                 return sent_indices, sent_labels
             else:
                 return sent_indices
+        
 
-        half_length = len(examples['input_ids'][0])//2
-        num_sentences = len(examples['input_ids'])
-
-        examples1 = {}
-        examples2 = {}
-        for key in examples.keys():
-            examples1[key] = [deepcopy(examples[key][j][:half_length]) for j in range(num_sentences)]
-            examples2[key] = [deepcopy(examples[key][j][half_length:]) for j in range(num_sentences)]
-
-        orig_examples1 = deepcopy(examples1)
-        orig_examples2 = deepcopy(examples2)
-
-        examples1['token_type_ids'] = [[1] * half_length] * num_sentences
-        examples2['token_type_ids'] = [[1] * half_length] * num_sentences
+        orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences = split_inputs(examples)
 
         for j in range(num_sentences):
             example_length = len(examples1['input_ids'][j])
@@ -437,15 +494,7 @@ def modify_inputs_permute_sentence(data_args, training_args, datasets, task_name
         examples1['position_ids'] = create_position_ids_from_input_ids(examples1['input_ids'], tokenizer.pad_token_id)
         examples2['position_ids'] = create_position_ids_from_input_ids(examples2['input_ids'], tokenizer.pad_token_id)
 
-        for key in examples.keys():
-            for j in range(num_sentences):
-                orig_examples1[key][j] += examples1[key][j]
-                orig_examples2[key][j] += examples2[key][j]
-
-        for key in orig_examples1.keys():
-            orig_examples1[key] += orig_examples2[key]
-        
-        return orig_examples1
+        return merge_inputs(orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer)
 
     # Step 2: Return modified dataset
     return create_modified_dataset(data_args, map_function, datasets, tokenizer.pad_token_id)

@@ -27,6 +27,7 @@ import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import json
+import pdb
 
 
 # Integrations must be imported before ML frameworks:
@@ -52,7 +53,7 @@ from torch import nn
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.dataset import Dataset
 from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data.sampler import RandomSampler, SequentialSampler
+from torch.utils.data.sampler import RandomSampler, SequentialSampler, WeightedRandomSampler
 
 from .data.data_collator import DataCollator, DataCollatorWithPadding, default_data_collator
 from .file_utils import WEIGHTS_NAME, is_apex_available, is_datasets_available, is_in_notebook, is_torch_tpu_available
@@ -162,7 +163,7 @@ if is_fairscale_available():
 logger = logging.get_logger(__name__)
 
 
-class TrainerWordModifications:
+class TrainerWordModificationsTLM:
     """
     Trainer is a simple but feature-complete training and eval loop for PyTorch, optimized for 🤗 Transformers.
 
@@ -410,8 +411,19 @@ class TrainerWordModifications:
         elif is_torch_tpu_available():
             return get_tpu_sampler(self.train_dataset)
         else:
+            # pdb.set_trace()
+            # WeightedRandomSampler to determine how often we get TLM vs MLM data
+            # Replacement is true by default
+            is_tlm = np.array(self.train_dataset['tlm_data']).flatten()
+            # pdb.set_trace()
+            num_tlm = np.sum(is_tlm == 1)
+            num_mlm = is_tlm.shape[0] - num_tlm
+            probabilities = np.zeros(is_tlm.shape[0])
+            probabilities += self.data_args.tlm_sample_rate / num_tlm * (is_tlm==1)
+            probabilities += (1-self.data_args.tlm_sample_rate) / num_mlm * (is_tlm==0)
+
             return (
-                RandomSampler(self.train_dataset)
+                WeightedRandomSampler(probabilities, probabilities.shape[0])
                 if self.args.local_rank == -1
                 else DistributedSampler(self.train_dataset)
             )
