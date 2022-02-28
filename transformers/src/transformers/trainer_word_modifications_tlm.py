@@ -417,16 +417,23 @@ class TrainerWordModificationsTLM:
             is_tlm = np.array(self.train_dataset['tlm_data']).flatten()
             # pdb.set_trace()
             num_tlm = np.sum(is_tlm == 1)
-            num_mlm = is_tlm.shape[0] - num_tlm
-            probabilities = np.zeros(is_tlm.shape[0])
-            probabilities += self.data_args.tlm_sample_rate / num_tlm * (is_tlm==1)
-            probabilities += (1-self.data_args.tlm_sample_rate) / num_mlm * (is_tlm==0)
+            if num_tlm != 0:
+                num_mlm = is_tlm.shape[0] - num_tlm
+                probabilities = np.zeros(is_tlm.shape[0])
+                probabilities += self.data_args.tlm_sample_rate / num_tlm * (is_tlm==1)
+                probabilities += (1-self.data_args.tlm_sample_rate) / num_mlm * (is_tlm==0)
 
-            return (
-                WeightedRandomSampler(probabilities, probabilities.shape[0])
-                if self.args.local_rank == -1
-                else DistributedSampler(self.train_dataset)
-            )
+                return (
+                    WeightedRandomSampler(probabilities, probabilities.shape[0])
+                    if self.args.local_rank == -1
+                    else DistributedSampler(self.train_dataset)
+                )
+            else:
+                return (
+                    RandomSampler(self.train_dataset)
+                    if self.args.local_rank == -1
+                    else DistributedSampler(self.train_dataset)
+                )
 
     def get_train_dataloader(self) -> DataLoader:
         """

@@ -12,77 +12,92 @@ import random
 import pdb
 from datasets import DatasetDict
 import time
+import math
 
 def create_position_ids_from_input_ids(input_ids, padding_idx):
     an_array = np.array(input_ids)
     mask = np.not_equal(an_array, padding_idx)
     incremental_indices = np.cumsum(mask, axis=1) * mask
     return (incremental_indices.astype(int) + padding_idx).tolist()
-        
-def split_inputs(examples):
+
+def split_inputs(examples, tlm_generation_rate):
     half_length = len(examples['input_ids'][0])//2
+    # num_sentences = len(examples['input_ids'])
     num_sentences = len(examples['input_ids'])
+    num_choices = math.ceil(num_sentences*tlm_generation_rate)
+    select_indices = np.random.choice(num_sentences, num_choices, False)
 
     examples1 = {}
     examples2 = {}
+    syn_examples = {}
     for key in examples.keys():
         if key != 'tlm_data':
-            examples1[key] = [deepcopy(examples[key][j][:half_length]) for j in range(num_sentences)]
-            examples2[key] = [deepcopy(examples[key][j][half_length:]) for j in range(num_sentences)]
+            examples1[key] = [deepcopy(examples[key][j][:half_length]) for j in select_indices]
+            examples2[key] = [deepcopy(examples[key][j][half_length:]) for j in select_indices]
+        syn_examples[key] = deepcopy(examples[key])
 
     orig_examples1 = deepcopy(examples1)
     orig_examples2 = deepcopy(examples2)
 
-    examples1['token_type_ids'] = [[1]*half_length for i in range(num_sentences)]
-    examples2['token_type_ids'] = [[1]*half_length for i in range(num_sentences)]
+    examples1['token_type_ids'] = [[1]*half_length for i in range(num_choices)]
+    examples2['token_type_ids'] = [[1]*half_length for i in range(num_choices)]
 
-    return orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences
+    return syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_choices
 
-def merge_inputs(orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer):
-    syn_examples1 = deepcopy(examples1)
-    syn_examples2 = deepcopy(examples2)
+def merge_inputs(syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, pad_token_id):
+    # syn_examples1 = deepcopy(examples1)
+    # syn_examples2 = deepcopy(examples2)
 
-    for key in examples1.keys():
-        for j in range(num_sentences):
-            # if key == 'token_type_ids':
-            #     print(syn_examples1['token_type_ids'][0])
-            #     print(syn_examples1['token_type_ids'][1])
-            syn_examples1[key][j] += deepcopy(syn_examples2[key][j])
+    # for key in examples1.keys():
+    #     for j in range(num_sentences):
+    #         # if key == 'token_type_ids':
+    #         #     print(syn_examples1['token_type_ids'][0])
+    #         #     print(syn_examples1['token_type_ids'][1])
+    #         syn_examples1[key][j] += deepcopy(syn_examples2[key][j])
 
-    syn_examples1['position_ids'] = create_position_ids_from_input_ids(syn_examples1['input_ids'], tokenizer.pad_token_id)
-    syn_examples1["tlm_data"] = [[0] for i in range(len(syn_examples1['input_ids']))]
+    syn_examples['position_ids'] = create_position_ids_from_input_ids(syn_examples['input_ids'], pad_token_id)
+    syn_examples["tlm_data"] = [[0] for i in range(len(syn_examples['input_ids']))]
+    syn_examples['token_type_ids'] = [[0] * len(syn_examples['input_ids'][0]) for i in range(len(syn_examples['input_ids']))]
 
-    # print(orig_examples1['input_ids'][0][:10])
-    for key in examples1.keys():
-        for j in range(num_sentences):
-            orig_examples1[key][j] += deepcopy(examples1[key][j])
-            orig_examples2[key][j] += deepcopy(examples2[key][j])
+    if num_sentences > 0:
+        orig_examples1['position_ids'] = create_position_ids_from_input_ids(orig_examples1['input_ids'], pad_token_id)
+        orig_examples2['position_ids'] = create_position_ids_from_input_ids(orig_examples2['input_ids'], pad_token_id)
+        examples1['position_ids'] = create_position_ids_from_input_ids(examples1['input_ids'], pad_token_id)
+        examples2['position_ids'] = create_position_ids_from_input_ids(examples2['input_ids'], pad_token_id)
 
-    # print(orig_examples1['input_ids'][0][:10])
-    # print(len(orig_examples1['input_ids']), len(orig_examples1['input_ids'][0]))
+        # print(orig_examples1['input_ids'][0][:10])
+        for key in examples1.keys():
+            for j in range(num_sentences):
+                orig_examples1[key][j] += deepcopy(examples1[key][j])
+                orig_examples2[key][j] += deepcopy(examples2[key][j])
 
-    for key in orig_examples1.keys():
-        orig_examples1[key] += deepcopy(orig_examples2[key])
-    
-    orig_examples1["tlm_data"] = [[1] for i in range(len(orig_examples1['input_ids']))]
-    
-    # print(syn_examples1['tlm_data'])
-    # print(orig_examples1['tlm_data'])
+        # print(orig_examples1['input_ids'][0][:10])
+        # print(len(orig_examples1['input_ids']), len(orig_examples1['input_ids'][0]))
 
-    for key in syn_examples1.keys():
-        syn_examples1[key] += deepcopy(orig_examples1[key])
+        for key in orig_examples1.keys():
+            orig_examples1[key] += deepcopy(orig_examples2[key])
+        
+        orig_examples1["tlm_data"] = [[1] for i in range(len(orig_examples1['input_ids']))]
+        
+        # print(syn_examples1['tlm_data'])
+        # print(orig_examples1['tlm_data'])
+
+        for key in syn_examples.keys():
+            syn_examples[key] += deepcopy(orig_examples1[key])
 
     # print(syn_examples1['tlm_data'])
     # print(len(orig_examples1['input_ids']), len(orig_examples1['input_ids'][0]), len(syn_examples1['input_ids']), len(syn_examples1['input_ids'][0]))
     
     # print(syn_examples1)
-    # for key in syn_examples1.keys():
+    # for key in syn_examples.keys():
     #     print(key)
-    #     for i in range(len(syn_examples1[key])):
-    #         print(len(syn_examples1[key][i]))
+    #     for i in range(len(syn_examples[key])):
+    #         print(len(syn_examples[key][i]))
     #     print()
 
-    return syn_examples1
+    # pdb.set_trace()
+
+    return syn_examples
 
 def create_modified_dataset(data_args, map_function, datasets, pad_token_id = 1):
     # # Create new dataset using map function
@@ -134,6 +149,8 @@ def create_modified_dataset(data_args, map_function, datasets, pad_token_id = 1)
             num_proc=data_args.preprocessing_num_workers
         )
     
+    # pdb.set_trace()
+
     # Step 3: Check if a modified dataset needs to be ADDED or if it should be REPLACED
     if data_args.word_modification == 'add':
         # Check if there are multiple datasets or if it's a single dataset
@@ -211,7 +228,8 @@ def modify_inputs_words(data_args, training_args, datasets, task_name, tokenizer
     return create_modified_dataset(data_args, map_function, datasets)
 
 # Just for QA (inversion)
-def modify_inputs_invert_qa(data_args, training_args, datasets, task_name, tokenizer=None, negative_label=None):        
+# TODO: Still need to implement this
+def modify_inputs_invert_qa(data_args, training_args, datasets, task_name, tokenizer=None, negative_label=None):
     # Check the arguments
     assert data_args.word_modification == 'add' or data_args.word_modification == 'replace', "Illegal option for argument word_modification"
 
@@ -356,15 +374,25 @@ def modify_inputs_invert(data_args, training_args, datasets, task_name, tokenize
                     start_idx = i+1
             return sent_indices
 
-        for j in range(len(examples['input_ids'])):
-            example_length = len(examples['input_ids'][j])
-            modified_examples = reverse_substr(examples['input_ids'][j])
-            examples['input_ids'][j] = [modified_examples[i] for i in range(example_length)]
-            # If it's a token classification task, flip the labels too
-            if task_name in ['ner', 'pos']:
-                modified_labels = reverse_substr_ner_pos(examples['labels'][j])
-                examples['labels'][j] = [modified_labels[i] for i in range(example_length)]
-        return examples
+        def perform_inversion(data):
+            for j in range(len(data['input_ids'])):
+                l = len(data['input_ids'][j])
+                modified_examples = reverse_substr(data['input_ids'][j])
+                data['input_ids'][j] = [modified_examples[i] for i in range(l)]
+                # If it's a token classification task, flip the labels too
+                if task_name in ['ner', 'pos']:
+                    modified_labels = reverse_substr_ner_pos(data['labels'][j])
+                    data['labels'][j] = [modified_labels[i] for i in range(l)]
+
+        syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences = split_inputs(examples, data_args.tlm_generation_rate)
+
+        perform_inversion(syn_examples)
+        perform_inversion(examples1)
+        perform_inversion(examples2)
+
+        # pdb.set_trace()
+
+        return merge_inputs(syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer.pad_token_id)
 
     # Step 2: Return modified dataset
     return create_modified_dataset(data_args, map_function, datasets)       
@@ -381,33 +409,37 @@ def modify_inputs_one_to_one_mapping(data_args, training_args, datasets, task_na
     vocab_size = tokenizer.vocab_size
     # If we are replacing only a fraction of the words, create a list
     # We use the same variable data_args.modify_words_probability here
+
     if data_args.one_to_one_file is not None:
         dont_modify = np.load(open(data_args.one_to_one_file, 'rb'))
 
         # Step 1: Create map function for modification
         def map_function(examples):
-            orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences = split_inputs(examples)
+            syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences = split_inputs(examples, data_args.tlm_generation_rate)
 
             def one_to_one_mapping(data):
                 for j in range(len(data['input_ids'])):
                     data['input_ids'][j] = [data['input_ids'][j][i] if (data['input_ids'][j][i] in special_tokens or data['input_ids'][j][i] in dont_modify) else (data['input_ids'][j][i] + vocab_size)  for i in range(len(data['input_ids'][j]))]
 
+            one_to_one_mapping(syn_examples)
             one_to_one_mapping(examples1)
             one_to_one_mapping(examples2)
 
-            return merge_inputs(orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer)
+            return merge_inputs(syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer.pad_token_id)
     else:
         # Step 1: Create map function for modification
         def map_function(examples):
-            orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences = split_inputs(examples)
+            syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences = split_inputs(examples, data_args.tlm_generation_rate)
 
             def one_to_one_mapping(data):
                 for j in range(len(data['input_ids'])):
                     data['input_ids'][j] = [data['input_ids'][j][i] if (data['input_ids'][j][i] in special_tokens) else (data['input_ids'][j][i] + vocab_size)  for i in range(len(data['input_ids'][j]))]
 
+            # pdb.set_trace()
+            one_to_one_mapping(syn_examples)
             one_to_one_mapping(examples1)
             one_to_one_mapping(examples2)
-            return merge_inputs(orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer)
+            return merge_inputs(syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer.pad_token_id)
 
 
     # Step 2: Return modified dataset
@@ -468,39 +500,34 @@ def modify_inputs_permute_sentence(data_args, training_args, datasets, task_name
             else:
                 return sent_indices
         
+        def perform_permutation(data):
+            for j in range(len(data['input_ids'])):
+                l = len(data['input_ids'][j])
+                if task_name in ['ner', 'pos']:
+                    modified_examples, modified_labels = permute_substr(data['input_ids'][j], sent_labels=data['labels'][j])
+                    data['input_ids'][j] = [modified_examples[i] for i in range(l)]
+                    data['labels'][j] = [modified_labels[i] for i in range(l)]
+                else:
+                    modified_examples = permute_substr(data['input_ids'][j])
+                    data['input_ids'][j] = [modified_examples[i] for i in range(l)]
 
-        orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences = split_inputs(examples)
+        syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences = split_inputs(examples, data_args.tlm_generation_rate)
 
-        for j in range(num_sentences):
-            example_length = len(examples1['input_ids'][j])
-            if task_name in ['ner', 'pos']:
-                # If it's a token classification task, flip the labels too
-                modified_examples, modified_labels = permute_substr(examples1['input_ids'][j], sent_labels=examples1['labels'][j])
-                examples1['input_ids'][j] = [modified_examples[i] for i in range(example_length)]
-                examples1['labels'][j] = [modified_labels[i] for i in range(example_length)]
+        perform_permutation(examples1)
+        perform_permutation(examples2)
+        perform_permutation(syn_examples)
 
-                modified_examples, modified_labels = permute_substr(examples2['input_ids'][j], sent_labels=examples2['labels'][j])
-                examples2['input_ids'][j] = [modified_examples[i] for i in range(example_length)]
-                examples2['labels'][j] = [modified_labels[i] for i in range(example_length)]
-            else:
-                modified_examples = permute_substr(examples1['input_ids'][j])
-                examples1['input_ids'][j] = [modified_examples[i] for i in range(example_length)]
+        # pdb.set_trace()
 
-                modified_examples = permute_substr(examples2['input_ids'][j])
-                examples2['input_ids'][j] = [modified_examples[i] for i in range(example_length)]
-
-        orig_examples1['position_ids'] = create_position_ids_from_input_ids(orig_examples1['input_ids'], tokenizer.pad_token_id)
-        orig_examples2['position_ids'] = create_position_ids_from_input_ids(orig_examples2['input_ids'], tokenizer.pad_token_id)
-        examples1['position_ids'] = create_position_ids_from_input_ids(examples1['input_ids'], tokenizer.pad_token_id)
-        examples2['position_ids'] = create_position_ids_from_input_ids(examples2['input_ids'], tokenizer.pad_token_id)
-
-        return merge_inputs(orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer)
+        return merge_inputs(syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer.pad_token_id)
 
     # Step 2: Return modified dataset
     return create_modified_dataset(data_args, map_function, datasets, tokenizer.pad_token_id)
 
 
-def modify_inputs_synthetic(data_args, training_args, datasets, task_name=None, task_type='mlm', tokenizer=None):
+def modify_inputs_synthetic(data_args, training_args, datasets, task_name=None, task_type='tlm', tokenizer=None):
+    # pdb.set_trace()
+
     if task_type in ['glue', 'xnli', 'ner', 'pos', 'qa', 'tatoeba']:
         data_args.preprocessing_num_workers = None
     

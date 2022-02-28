@@ -222,12 +222,20 @@ class DataTrainingArguments:
         },
     )
 
-    # Dataset ratio
+    # Ratio of sampling TLM data during training
     tlm_sample_rate: float = field(
         default=0.3,
         metadata={
             "help": "Percentage of time we sample a TLM token stream. For pure TLM, set to 1."
         },
+    )
+
+    # Ratio of TLM data generated during data generation
+    tlm_generation_rate: float = field(
+        default=1,
+        metadata={
+            "help": "Percentage of original sentences we use/sample to generate TLM data instances"
+        }
     )
 
     def __post_init__(self):
