@@ -31,7 +31,7 @@ from transformers.models.bert.modeling_bert import (
     BertSelfAttention,
     BertSelfOutput,
 )
-from transformers.models.roberta.modeling_roberta import (
+from MultilingualAnalysis.transformers.src.transformers.models.roberta.modeling_roberta import (
     RobertaConfig,
     RobertaForMaskedLM,
     RobertaForSequenceClassification,

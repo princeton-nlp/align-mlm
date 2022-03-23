@@ -77,6 +77,9 @@ class RobertaEmbeddings(nn.Module):
         self.word_embeddings = nn.Embedding(config.vocab_size, config.hidden_size, padding_idx=config.pad_token_id)
         self.position_embeddings = nn.Embedding(config.max_position_embeddings, config.hidden_size)
         self.token_type_embeddings = nn.Embedding(config.type_vocab_size, config.hidden_size)
+        self.lang_type_embeddings = nn.Embedding(config.num_langs, config.hidden_size)
+        # self.lang_type_embeddings = nn.Embedding(2, config.hidden_size)
+        # pdb.set_trace()
 
         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be able to load
         # any TensorFlow checkpoint file
@@ -93,7 +96,7 @@ class RobertaEmbeddings(nn.Module):
             config.max_position_embeddings, config.hidden_size, padding_idx=self.padding_idx
         )
 
-    def forward(self, input_ids=None, token_type_ids=None, position_ids=None, inputs_embeds=None):
+    def forward(self, input_ids=None, token_type_ids=None, lang_type_ids=None, position_ids=None, inputs_embeds=None):
         if position_ids is None:
             if input_ids is not None:
                 # Create the position ids from the input token ids. Any padded tokens remain padded.
@@ -114,12 +117,17 @@ class RobertaEmbeddings(nn.Module):
 
         if token_type_ids is None:
             token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=self.position_ids.device)
+        
+        if lang_type_ids is None:
+            lang_type_ids = torch.zeros(input_shape, dtype=torch.long, device=self.position_ids.device)
 
+        # pdb.set_trace()
         if inputs_embeds is None:
             inputs_embeds = self.word_embeddings(input_ids)
         token_type_embeddings = self.token_type_embeddings(token_type_ids)
+        lang_type_embeddings = self.lang_type_embeddings(lang_type_ids)
 
-        embeddings = inputs_embeds + token_type_embeddings
+        embeddings = inputs_embeds + token_type_embeddings + lang_type_embeddings
         if self.position_embedding_type == "absolute":
             position_embeddings = self.position_embeddings(position_ids)
             embeddings += position_embeddings
@@ -578,6 +586,12 @@ ROBERTA_INPUTS_DOCSTRING = r"""
             more detail.
         return_dict (:obj:`bool`, `optional`):
             Whether or not to return a :class:`~transformers.file_utils.ModelOutput` instead of a plain tuple.
+        
+        Newly added language ids for TLM purposes!
+        lang_type_ids (:obj:`torch.LongTensor` of shape :obj:`({0})`, `optional`):
+            Language indices to indicate which language each token comes from. Indices are selected in ``[0, 
+            config.num_langs - 1]``:
+
 """
 
 
@@ -607,6 +621,7 @@ class RobertaModel(RobertaPreTrainedModel):
     # Copied from transformers.models.bert.modeling_bert.BertModel.__init__ with Bert->Roberta
     def __init__(self, config, add_pooling_layer=True):
         super().__init__(config)
+        # pdb.set_trace()
         self.config = config
 
         self.embeddings = RobertaEmbeddings(config)
@@ -643,6 +658,7 @@ class RobertaModel(RobertaPreTrainedModel):
         input_ids=None,
         attention_mask=None,
         token_type_ids=None,
+        lang_type_ids=None,
         position_ids=None,
         head_mask=None,
         inputs_embeds=None,
@@ -661,6 +677,8 @@ class RobertaModel(RobertaPreTrainedModel):
             the cross-attention if the model is configured as a decoder. Mask values selected in ``[0, 1]``: ``1`` for
             tokens that are NOT MASKED, ``0`` for MASKED tokens.
         """
+        # pdb.set_trace()
+
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
             output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
@@ -682,6 +700,8 @@ class RobertaModel(RobertaPreTrainedModel):
             attention_mask = torch.ones(input_shape, device=device)
         if token_type_ids is None:
             token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=device)
+        if lang_type_ids is None:
+            lang_type_ids = torch.zeros(input_shape, dtype=torch.long, device=device)
 
         # We can provide a self-attention mask of dimensions [batch_size, from_seq_length, to_seq_length]
         # ourselves in which case we just need to make it broadcastable to all heads.
@@ -705,8 +725,9 @@ class RobertaModel(RobertaPreTrainedModel):
         # and head_mask is converted to shape [num_hidden_layers x batch x num_heads x seq_length x seq_length]
         head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
 
+        # pdb.set_trace()
         embedding_output = self.embeddings(
-            input_ids=input_ids, position_ids=position_ids, token_type_ids=token_type_ids, inputs_embeds=inputs_embeds
+            input_ids=input_ids, position_ids=position_ids, token_type_ids=token_type_ids, lang_type_ids=lang_type_ids, inputs_embeds=inputs_embeds
         )
         encoder_outputs = self.encoder(
             embedding_output,
@@ -764,6 +785,7 @@ class RobertaForCausalLM(RobertaPreTrainedModel):
         input_ids=None,
         attention_mask=None,
         token_type_ids=None,
+        lang_type_ids=None,
         position_ids=None,
         head_mask=None,
         inputs_embeds=None,
@@ -813,6 +835,7 @@ class RobertaForCausalLM(RobertaPreTrainedModel):
             input_ids,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
+            lang_type_ids=lang_type_ids,
             position_ids=position_ids,
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
@@ -894,6 +917,7 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
         input_ids=None,
         attention_mask=None,
         token_type_ids=None,
+        lang_type_ids=None,
         position_ids=None,
         head_mask=None,
         inputs_embeds=None,
@@ -918,6 +942,7 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
             input_ids,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
+            lang_type_ids=lang_type_ids,
             position_ids=position_ids,
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
@@ -1003,6 +1028,7 @@ class RobertaForSequenceClassification(RobertaPreTrainedModel):
         input_ids=None,
         attention_mask=None,
         token_type_ids=None,
+        lang_type_ids=None,
         position_ids=None,
         head_mask=None,
         inputs_embeds=None,
@@ -1023,6 +1049,7 @@ class RobertaForSequenceClassification(RobertaPreTrainedModel):
             input_ids,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
+            lang_type_ids=lang_type_ids,
             position_ids=position_ids,
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
@@ -1085,6 +1112,7 @@ class RobertaForMultipleChoice(RobertaPreTrainedModel):
         self,
         input_ids=None,
         token_type_ids=None,
+        lang_type_ids=None,
         attention_mask=None,
         labels=None,
         position_ids=None,
@@ -1106,6 +1134,7 @@ class RobertaForMultipleChoice(RobertaPreTrainedModel):
         flat_input_ids = input_ids.view(-1, input_ids.size(-1)) if input_ids is not None else None
         flat_position_ids = position_ids.view(-1, position_ids.size(-1)) if position_ids is not None else None
         flat_token_type_ids = token_type_ids.view(-1, token_type_ids.size(-1)) if token_type_ids is not None else None
+        flat_lang_type_ids = lang_type_ids.view(-1, lang_type_ids.size(-1)) if lang_type_ids is not None else None
         flat_attention_mask = attention_mask.view(-1, attention_mask.size(-1)) if attention_mask is not None else None
         flat_inputs_embeds = (
             inputs_embeds.view(-1, inputs_embeds.size(-2), inputs_embeds.size(-1))
@@ -1117,6 +1146,7 @@ class RobertaForMultipleChoice(RobertaPreTrainedModel):
             flat_input_ids,
             position_ids=flat_position_ids,
             token_type_ids=flat_token_type_ids,
+            lang_type_ids=flat_lang_type_ids,
             attention_mask=flat_attention_mask,
             head_mask=head_mask,
             inputs_embeds=flat_inputs_embeds,
@@ -1180,6 +1210,7 @@ class RobertaForTokenClassification(RobertaPreTrainedModel):
         input_ids=None,
         attention_mask=None,
         token_type_ids=None,
+        lang_type_ids=None,
         position_ids=None,
         head_mask=None,
         inputs_embeds=None,
@@ -1199,6 +1230,7 @@ class RobertaForTokenClassification(RobertaPreTrainedModel):
             input_ids,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
+            lang_type_ids=lang_type_ids,
             position_ids=position_ids,
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
@@ -1289,6 +1321,7 @@ class RobertaForQuestionAnswering(RobertaPreTrainedModel):
         input_ids=None,
         attention_mask=None,
         token_type_ids=None,
+        lang_type_ids=None,
         position_ids=None,
         head_mask=None,
         inputs_embeds=None,
@@ -1314,6 +1347,7 @@ class RobertaForQuestionAnswering(RobertaPreTrainedModel):
             input_ids,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
+            lang_type_ids=lang_type_ids,
             position_ids=position_ids,
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,

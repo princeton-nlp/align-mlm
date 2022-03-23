@@ -249,6 +249,7 @@ class TrainerWordModificationsTLM:
             model = model.to(args.device)
 
         self.model = model
+
         default_collator = default_data_collator if tokenizer is None else DataCollatorWithPadding(tokenizer)
         self.data_collator = data_collator if data_collator is not None else default_collator
         
@@ -414,8 +415,8 @@ class TrainerWordModificationsTLM:
             # pdb.set_trace()
             # WeightedRandomSampler to determine how often we get TLM vs MLM data
             # Replacement is true by default
-            is_tlm = np.array(self.train_dataset['tlm_data']).flatten()
             # pdb.set_trace()
+            is_tlm = np.array(self.train_dataset['tlm_data']).flatten()
             num_tlm = np.sum(is_tlm == 1)
             if num_tlm != 0:
                 num_mlm = is_tlm.shape[0] - num_tlm
@@ -423,6 +424,7 @@ class TrainerWordModificationsTLM:
                 probabilities += self.data_args.tlm_sample_rate / num_tlm * (is_tlm==1)
                 probabilities += (1-self.data_args.tlm_sample_rate) / num_mlm * (is_tlm==0)
 
+                # pdb.set_trace()
                 return (
                     WeightedRandomSampler(probabilities, probabilities.shape[0])
                     if self.args.local_rank == -1
@@ -434,6 +436,11 @@ class TrainerWordModificationsTLM:
                     if self.args.local_rank == -1
                     else DistributedSampler(self.train_dataset)
                 )
+            # return (
+            #     RandomSampler(self.train_dataset)
+            #     if self.args.local_rank == -1
+            #     else DistributedSampler(self.train_dataset)
+            # )
 
     def get_train_dataloader(self) -> DataLoader:
         """
@@ -662,6 +669,17 @@ class TrainerWordModificationsTLM:
         # Data loader and number of training steps
         train_dataloader = self.get_train_dataloader()
 
+        # eq = 0
+        # neq = 0
+        # for _ in range(200):
+        #     for step, inputs in enumerate(train_dataloader):
+        #             eq += len(np.where(inputs['lang_type_ids'].numpy()[:,0] == inputs['lang_type_ids'].numpy()[:,-1])[0])
+        #             neq += len(np.where(inputs['lang_type_ids'].numpy()[:,0] != inputs['lang_type_ids'].numpy()[:,-1])[0])
+        #             print("batch index {}, 0/1: {}/{}".format(
+        #             step, eq, neq))
+
+        # print(f"Statistics: {neq/(eq+neq)}")
+
         # Setting up training control variables:
         # number of training epochs: num_train_epochs
         # number of training steps per epoch: num_update_steps_per_epoch
@@ -818,6 +836,7 @@ class TrainerWordModificationsTLM:
             self.control = self.callback_handler.on_epoch_begin(self.args, self.state, self.control)
 
             for step, inputs in enumerate(epoch_iterator):
+                # pdb.set_trace()
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1

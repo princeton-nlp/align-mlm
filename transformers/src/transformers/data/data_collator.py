@@ -22,7 +22,6 @@ from torch.nn.utils.rnn import pad_sequence
 
 from ..tokenization_utils_base import BatchEncoding, PaddingStrategy, PreTrainedTokenizerBase
 
-
 InputDataClass = NewType("InputDataClass", Any)
 
 """
