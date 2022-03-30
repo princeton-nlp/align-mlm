@@ -3,9 +3,9 @@
 function SourceCodeAndInstall {
     mkdir source_code
     cd source_code
-    git clone https://github.com/ameet-1997/Multilingual.git
-    cd Multilingual/transformers/
-    conda activate torch-xla-1.7
+    git clone https://github.com/henrytang1/MultilingualModelAnalysis.git
+    cd MultilingualModelAnalysis/transformers/
+    conda activate multilingual
     # In some instance, just `conda activate base` should work.
     # `import torch_xla` to check if it's the correct environment.
     pip install wandb
@@ -33,15 +33,15 @@ function MountBucket {
 }
 
 function MakeTPUs {
-    export VERSION=1.7
-    gcloud compute tpus create tpu1 --zone=us-central1-a --network=default --version=pytorch-1.7 --accelerator-type=v3-8
+    export VERSION=1.11
+    gcloud compute tpus create h-tpu-1 --zone=us-central1-a --network=default --version=pytorch-1.11 --accelerator-type=v3-8
     gcloud compute tpus list --zone=us-central1-a
     # export TPU_IP_ADDRESS=10.38.186.234
     # export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
 }
 
 function RestartVM {
-    conda activate torch-xla-1.7
+    conda activate clone
     gcsfuse --implicit-dirs --debug_fuse multilingual-1  bucket/
     export VERSION=1.7
     gcloud compute tpus list --zone=us-central1-a
@@ -50,17 +50,14 @@ function RestartVM {
     cd source_code/Multilingual/transformers/
     git pull
     export WANDB_API_KEY="X"
-    export WANDB_ENTITY="ameet-1997"
-    export WANDB_PROJECT="multilingual_synthetic"
-    export WANDB_PROJECT="multilingual_synthetic_downstream"
-    export WANDB_PROJECT="multilingual_analysis"
-    export WANDB_PROJECT="multilingual_mono_zs"
+    export WANDB_ENTITY="henrytang"
+    export WANDB_PROJECT="multilingual_synthetic_tlm"
 }
 
 function Wandb {
     # wandb login
     export WANDB_API_KEY="X"
-    export WANDB_ENTITY="ameet-1997"
+    export WANDB_ENTITY="henrytang"
     export WANDB_PROJECT="mutlilingual_word"
     # export WANDB_NAME="wikitext_mlm"
     # Run name is specified using the --run_name argument
