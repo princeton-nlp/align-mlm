@@ -11,6 +11,7 @@ from copy import deepcopy
 import random
 from datasets import DatasetDict
 from .synthetic_utils_tlm import create_modified_dataset, add_lang_and_pos
+import pdb
 
 def no_inputs_modification(data_args, training_args, datasets, task_name, tokenizer):
     add_lang_and_pos(datasets, tokenizer.pad_token_id)
@@ -231,6 +232,8 @@ def modify_inputs_invert(data_args, training_args, datasets, task_name, tokenize
             if task_name in ['ner', 'pos']:
                 modified_labels = reverse_substr_ner_pos(examples['labels'][j])
                 examples['labels'][j] = [modified_labels[i] for i in range(example_length)]
+        
+        modify_lang_type_id(examples)
         return examples
 
     # Step 2: Return modified dataset
@@ -258,7 +261,10 @@ def modify_inputs_one_to_one_mapping(data_args, training_args, datasets, task_na
             num_cols = len(examples['input_ids'][0])
             for j in range(num_rows):
                 examples['input_ids'][j] = [examples['input_ids'][j][i] if (examples['input_ids'][j][i] in special_tokens or examples['input_ids'][j][i] in dont_modify) else (examples['input_ids'][j][i] + vocab_size)  for i in range(num_cols)]
+            
+            modify_lang_type_id(examples)
             return examples
+        
     else:
         # Step 1: Create map function for modification
         def map_function(examples):
@@ -266,6 +272,8 @@ def modify_inputs_one_to_one_mapping(data_args, training_args, datasets, task_na
             num_cols = len(examples['input_ids'][0])
             for j in range(num_rows):
                 examples['input_ids'][j] = [examples['input_ids'][j][i] if (examples['input_ids'][j][i] in special_tokens) else (examples['input_ids'][j][i] + vocab_size)  for i in range(num_cols)]
+            
+            modify_lang_type_id(examples)
             return examples
 
 
@@ -345,6 +353,8 @@ def modify_inputs_permute_sentence(data_args, training_args, datasets, task_name
 
 
 def modify_inputs_synthetic(data_args, training_args, datasets, task_name=None, task_type='mlm', tokenizer=None):
+    datasets = no_inputs_modification(data_args, training_args, datasets, task_name, tokenizer)
+
     if task_type in ['glue', 'xnli', 'ner', 'pos', 'qa', 'tatoeba']:
         data_args.preprocessing_num_workers = None
     
@@ -394,18 +404,17 @@ def modify_inputs_synthetic(data_args, training_args, datasets, task_name=None, 
         original_word_modification = data_args.word_modification
         data_args.word_modification = 'replace'
 
+    original_datasets = deepcopy(datasets)
     if data_args.permute_vocabulary:
         datasets = modify_inputs_permute(data_args, training_args, datasets, task_name)
-    elif data_args.modify_words:
+    if data_args.modify_words:
         datasets = modify_inputs_words(data_args, training_args, datasets, task_name, tokenizer)
-    elif data_args.invert_word_order:
+    if data_args.invert_word_order:
         datasets = modify_inputs_invert(data_args, training_args, datasets, task_name, tokenizer)
-    elif data_args.one_to_one_mapping:
+    if data_args.one_to_one_mapping:
         datasets = modify_inputs_one_to_one_mapping(data_args, training_args, datasets, task_name, tokenizer)
-    elif data_args.permute_words:
+    if data_args.permute_words:
         datasets = modify_inputs_permute_sentence(data_args, training_args, datasets, task_name, tokenizer)
-    else:
-        datasets = no_inputs_modification(data_args, training_args, datasets, task_name, tokenizer)
 
     # If we need to sample only a part of the dataset, handle it separately
     if 'target_dataset_ratio' in dir(data_args) and data_args.target_dataset_ratio is not None:

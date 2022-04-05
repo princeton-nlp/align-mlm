@@ -36,14 +36,14 @@ function MakeTPUs {
     export VERSION=1.11
     gcloud compute tpus create h-tpu-1 --zone=us-central1-a --network=default --version=pytorch-1.11 --accelerator-type=v3-8
     gcloud compute tpus list --zone=us-central1-a
-    # export TPU_IP_ADDRESS=10.38.186.234
+    # export TPU_IP_ADDRESS=10.19.14.114
     # export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
 }
 
 function RestartVM {
-    conda activate clone
+    conda activate multilingual
     gcsfuse --implicit-dirs --debug_fuse multilingual-1  bucket/
-    export VERSION=1.7
+    export VERSION=1.11
     gcloud compute tpus list --zone=us-central1-a
     # export TPU_IP_ADDRESS=10.38.186.234
     # export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
@@ -51,7 +51,7 @@ function RestartVM {
     git pull
     export WANDB_API_KEY="X"
     export WANDB_ENTITY="henrytang"
-    export WANDB_PROJECT="multilingual_synthetic_tlm"
+    export WANDB_PROJECT="tlm_multilingual_synthetic"
 }
 
 function Wandb {
