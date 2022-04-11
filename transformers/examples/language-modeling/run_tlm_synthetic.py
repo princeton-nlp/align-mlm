@@ -329,6 +329,8 @@ def main():
         if extension == "txt":
             extension = "text"
         datasets = load_dataset(extension, data_files=data_files)
+
+    # pdb.set_trace()
     # See more about loading any type of standard or custom dataset (from files, python dict, pandas DataFrame, etc) at
     # https://huggingface.co/docs/datasets/loading_datasets.html.
 
@@ -426,6 +428,7 @@ def main():
             remove_columns=column_names,
             load_from_cache_file=not data_args.overwrite_cache,
         )
+        # pdb.set_trace()
 
         if data_args.max_seq_length is None:
             max_seq_length = tokenizer.model_max_length
@@ -466,6 +469,7 @@ def main():
             load_from_cache_file=not data_args.overwrite_cache,
         )
 
+    # pdb.set_trace()
     # tokenized datasets has become a dict after this point
     # Train and test are of type <class 'datasets.arrow_dataset.Dataset'>
     # BEFORE ->
