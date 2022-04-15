@@ -26,9 +26,11 @@ import os
 import sys
 from dataclasses import dataclass, field
 from typing import Optional
+from copy import deepcopy
+import numpy as np
 
-from datasets import load_dataset
-import pdb
+from datasets import load_dataset, concatenate_datasets
+
 import transformers
 from transformers import (
     CONFIG_MAPPING,
@@ -40,15 +42,14 @@ from transformers import (
     HfArgumentParser,
     Trainer,
     TrainerWordModifications,
-    TrainerWordModificationsTLM,
     TrainingArguments,
     set_seed,
 )
 from transformers.trainer_utils import is_main_process
 
 # Synthetic languages
-from transformers.synthetic_utils_tlm import modify_inputs_synthetic
-from transformers.synthetic_utils_tlm import modify_config
+from transformers import modify_inputs_synthetic
+from transformers.synthetic_utils import modify_config
 
 logger = logging.getLogger(__name__)
 MODEL_CONFIG_CLASSES = list(MODEL_FOR_MASKED_LM_MAPPING.keys())
@@ -101,6 +102,7 @@ class DataTrainingArguments:
         default=None, metadata={"help": "The configuration name of the dataset to use (via the datasets library)."}
     )
     train_file: Optional[str] = field(default=None, metadata={"help": "The input training data file (a text file)."})
+    transitive_file: Optional[str] = field(default=None, metadata={"help": "The input training data file (a text file)."})
     validation_file: Optional[str] = field(
         default=None,
         metadata={"help": "An optional input evaluation data file to evaluate the perplexity on (a text file)."},
@@ -220,23 +222,7 @@ class DataTrainingArguments:
         metadata={
             "help": "When less than one, use target_dataset_ratio * original dataset size."
         },
-    )
-
-    # Ratio of sampling TLM data during training
-    tlm_sample_rate: float = field(
-        default=0.3,
-        metadata={
-            "help": "Percentage of time we sample a TLM token stream. For pure TLM, set to 1."
-        },
-    )
-
-    # Ratio of TLM data generated during data generation
-    tlm_generation_rate: float = field(
-        default=1,
-        metadata={
-            "help": "Percentage of original sentences we use/sample to generate TLM data instances"
-        }
-    )
+    )    
 
     def __post_init__(self):
         if self.dataset_name is None and self.train_file is None and self.validation_file is None:
@@ -325,12 +311,15 @@ def main():
             data_files["train"] = data_args.train_file
         if data_args.validation_file is not None:
             data_files["validation"] = data_args.validation_file
+        if data_args.transitive_file is not None:
+            data_files["transitive_file"] = data_args.transitive_file
         extension = data_args.train_file.split(".")[-1]
         if extension == "txt":
             extension = "text"
+        ######################################### DATASET LOADED HERE #########################################
         datasets = load_dataset(extension, data_files=data_files)
+        ######################################### DATASET LOADED HERE #########################################
 
-    # pdb.set_trace()
     # See more about loading any type of standard or custom dataset (from files, python dict, pandas DataFrame, etc) at
     # https://huggingface.co/docs/datasets/loading_datasets.html.
 
@@ -418,9 +407,6 @@ def main():
         def tokenize_function(examples):
             return tokenizer(examples[text_column_name], return_special_tokens_mask=True)
 
-        # pdb.set_trace()
-        # datasets & tokenized_datasets is a DatasetDict
-        # <class 'datasets.dataset_dict.DatasetDict'>
         tokenized_datasets = datasets.map(
             tokenize_function,
             batched=True,
@@ -428,11 +414,6 @@ def main():
             remove_columns=column_names,
             load_from_cache_file=not data_args.overwrite_cache,
         )
-        # pdb.set_trace()
-        for i in tokenized_datasets['train']['input_ids'][0]:
-            print(tokenizer.decode([i]))
-        # asdf = tokenizer.decode(tokenized_datasets['train']['input_ids'][2])
-        pdb.set_trace()
 
         if data_args.max_seq_length is None:
             max_seq_length = tokenizer.model_max_length
@@ -446,26 +427,9 @@ def main():
 
         # Main data processing function that will concatenate all texts from our dataset and generate chunks of
         # max_seq_length.
-        # def group_texts(examples):
-        #     # Concatenate all texts.
-        #     concatenated_examples = {k: sum(examples[k], []) for k in examples.keys()}
-        #     total_length = len(concatenated_examples[list(examples.keys())[0]])
-        #     # We drop the small remainder, we could add padding if the model supported it instead of this drop, you can
-        #     # customize this part to your needs.
-        #     total_length = (total_length // max_seq_length) * max_seq_length
-        #     # Split by chunks of max_len.
-        #     result = {
-        #         k: [t[i : i + max_seq_length] for i in range(0, total_length, max_seq_length)]
-        #         for k, t in concatenated_examples.items()
-        #     }
-        #     return result
-
         def group_texts(examples):
             # Concatenate all texts.
             concatenated_examples = {k: sum(examples[k], []) for k in examples.keys()}
-            # for k in examples.keys():
-            #     print(k)
-            # pdb.set_trace()
             total_length = len(concatenated_examples[list(examples.keys())[0]])
             # We drop the small remainder, we could add padding if the model supported it instead of this drop, you can
             # customize this part to your needs.
@@ -477,13 +441,71 @@ def main():
             }
             return result
 
+        def make_tlm(examples):
+            ### IMPORTANT PARAMETER ###
+            tokens_per_batch = 512
+            pad_index = 0
+
+            num_pairs = len(examples['input_ids']//2)
+            lengths1 = np.array([len(examples['input_ids'][i]) for i in range(num_pairs)])
+            lengths2 = np.array([len(examples['input_ids'][i+num_pairs]) for i in range(num_pairs)])
+            lengths = lengths1+lengths2
+
+            indices = np.cumsum(lengths1)
+            # Append 0 to beginning of indices
+            indices = np.insert(indices, 0, 0)
+
+            concatenated = {k: sum(examples[k], []) for k in examples.keys()}
+
+            result = {
+                k: []
+                for k, t in examples.items()
+            }
+
+            cur_sum = 0
+            prev_idx = 0
+            for i in range(num_pairs):
+                if cur_sum + lengths[i] > tokens_per_batch:
+                    if i == prev_idx:
+                        continue
+                    for k, t in concatenated.items():
+                        data = [pad_index for i in range(tokens_per_batch)]
+                        distance = 2*(indices[i] - indices[prev_idx])
+                        data[-distance:] = t[indices[prev_idx]:indices[i]] + t[indices[prev_idx]+num_pairs:indices[i]+num_pairs]
+                        result[k].append(data)
+
+            return result
+            # batch_ids = np.cumsum(lengths[indices]) // tokens_per_batch
+            # _, bounds = np.unique(batch_ids, return_index=True)
+            # batches = [indices[bounds[i]:bounds[i + 1]] for i in range(len(bounds) - 1)]
+            # if bounds[-1] < len(indices):
+            #     batches.append(indices[bounds[-1]:])
+
+            # # optionally shuffle batches
+            # if shuffle:
+            #     np.random.shuffle(batches)
+
+            # # sanity checks
+            # assert n_sentences == sum([len(x) for x in batches])
+            # assert lengths[indices].sum() == sum([lengths[x].sum() for x in batches])
+
         # Note that with `batched=True`, this map processes 1,000 texts together, so group_texts throws away a
         # remainder for each of those groups of 1,000 texts. You can adjust that batch_size here but a higher value
         # might be slower to preprocess.
         #
         # To speed up this part, we use multiprocessing. See the documentation of the map method for more information:
         # https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.map
-        pdb.set_trace()
+
+        assert len(tokenized_datasets['train']['input_ids']) == len(tokenized_datasets['trainsitive_file']['input_ids'])
+        tlm_dataset = {'train': concatenate_datasets([deepcopy(tokenized_datasets['train']), deepcopy(tokenized_datasets["trainsitive_file"])])}
+        
+        tlm_dataset = tlm_dataset.map(
+            make_tlm,
+            batched=True,
+            batch_size=None,
+            num_proc=data_args.preprocessing_num_workers,
+            load_from_cache_file=not data_args.overwrite_cache,
+        )
 
         tokenized_datasets = tokenized_datasets.map(
             group_texts,
@@ -492,45 +514,22 @@ def main():
             load_from_cache_file=not data_args.overwrite_cache,
         )
 
-    # pdb.set_trace()
-    # tokenized datasets has become a dict after this point
-    # Train and test are of type <class 'datasets.arrow_dataset.Dataset'>
-    # BEFORE ->
-    # DatasetDict({
-    #     train: Dataset({
-    #         features: ['input_ids', 'attention_mask', 'special_tokens_mask'],
-    #         num_rows: 4
-    #     })
-    #     validation: Dataset({
-    #         features: ['input_ids', 'attention_mask', 'special_tokens_mask'],
-    #         num_rows: 1
-    #     })
-    # })
-
-    # AFTER ->
-    # {'train': Dataset({
-    #     features: ['input_ids', 'attention_mask', 'special_tokens_mask'],
-    #     num_rows: 8
-    # }), 'validation': Dataset({
-    #     features: ['input_ids', 'attention_mask', 'special_tokens_mask'],
-    #     num_rows: 2
-    # })}
-
-    # tokenized_datasets["train"]['input_ids'] -> list of size (1, 512)
-
-    # DataTrainingArguments(dataset_name=None, dataset_config_name=None, train_file='data/train.txt', validation_file='data/valid.txt', data_cache_dir=None, overwrite_cache=False, validation_split_percentage=5, max_seq_length=512, preprocessing_num_workers=None, mlm_probability=0.15, line_by_line=False, pad_to_max_length=False, permute_vocabulary=False, vocab_permutation_file=None, word_modification='add', modify_words=False, modify_words_probability=0.15, modify_words_range='100-50000', invert_word_order=True, one_to_one_mapping=False, one_to_one_file=None, shift_special=False, permute_words=False, target_dataset_ratio=None)
-    #TrainingArguments(output_dir=data/output_dir, overwrite_output_dir=True, do_train=True, do_eval=True, do_predict=False, model_parallel=False, evaluation_strategy=EvaluationStrategy.NO, prediction_loss_only=False, per_device_train_batch_size=16, per_device_eval_batch_size=16, gradient_accumulation_steps=1, eval_accumulation_steps=None, learning_rate=0.0001, weight_decay=0.0, adam_beta1=0.9, adam_beta2=0.999, adam_epsilon=1e-08, max_grad_norm=1.0, num_train_epochs=3.0, max_steps=5000, warmup_steps=1000, logging_dir=runs/Feb06_00-38-27_adroit5, logging_first_step=False, logging_steps=50, save_steps=-1, save_total_limit=None, no_cuda=False, seed=42, fp16=False, fp16_opt_level=O1, local_rank=-1, tpu_num_cores=None, tpu_metrics_debug=False, debug=False, dataloader_drop_last=False, eval_steps=50, dataloader_num_workers=0, past_index=-1, run_name=adroit_test, disable_tqdm=False, remove_unused_columns=True, label_names=None, load_best_model_at_end=False, metric_for_best_model=None, greater_is_better=None, ignore_data_skip=False, fp16_backend=auto, sharded_ddp=False)
     # Make synthetic language modifications if necessary
-    tokenized_datasets = modify_inputs_synthetic(data_args, training_args, tokenized_datasets, tokenizer=tokenizer)
-    # pdb.set_trace()
+    # tokenized_datasets = modify_inputs_synthetic(data_args, training_args, tokenized_datasets, tokenizer=tokenizer)
+    ######################################### Modified #########################################
+    data_args.word_modification = 'replace'
+    tokenized_datasets_new = modify_inputs_synthetic(data_args, training_args, tokenized_datasets["transitive_file"], tokenizer=tokenizer)
+    ######################################### Modified #########################################
+
+    # Combine the two datasets
+    tokenized_datasets = {'train': concatenate_datasets([tokenized_datasets['train'], tokenized_datasets_new]), 'validation': tokenized_datasets['validation']}
 
     # Data collator
     # This one will take care of randomly masking the tokens.
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm_probability=data_args.mlm_probability)
-    
-    # print(training_args)
+
     # Initialize our Trainer
-    trainer = TrainerWordModificationsTLM(
+    trainer = TrainerWordModifications(
         model=model,
         args=training_args,
         data_args=data_args,
