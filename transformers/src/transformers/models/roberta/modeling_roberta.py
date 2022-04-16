@@ -95,6 +95,8 @@ class RobertaEmbeddings(nn.Module):
         self.position_embeddings = nn.Embedding(
             config.max_position_embeddings, config.hidden_size, padding_idx=self.padding_idx
         )
+        self.lang_type_embeddings = nn.Embedding(config.num_langs, config.hidden_size, padding_idx=self.padding_idx)
+
 
     def forward(self, input_ids=None, token_type_ids=None, lang_type_ids=None, position_ids=None, inputs_embeds=None):
         if position_ids is None:

@@ -19,7 +19,7 @@ def create_position_ids_from_input_ids(input_ids, padding_idx):
     incremental_indices = np.cumsum(mask, axis=1) * mask
     return (incremental_indices.astype(int) + padding_idx).tolist()
 
-def split_inputs(examples, tlm_generation_rate):
+def split_inputs(examples, tlm_generation_rate, lang1_id, lang2_id):
     half_length = len(examples['input_ids'][0])//2
     num_sentences = len(examples['input_ids'])
     num_choices = math.ceil(num_sentences*tlm_generation_rate)
@@ -37,19 +37,19 @@ def split_inputs(examples, tlm_generation_rate):
     orig_examples1 = deepcopy(examples1)
     orig_examples2 = deepcopy(examples2)
 
-    examples1['lang_type_ids'] = [[1 for _ in range(half_length)] for i in range(num_choices)]
-    examples2['lang_type_ids'] = [[1 for _ in range(half_length)] for i in range(num_choices)]
+    examples1['lang_type_ids'] = [[lang2_id for _ in range(half_length)] for i in range(num_choices)]
+    examples2['lang_type_ids'] = [[lang2_id for _ in range(half_length)] for i in range(num_choices)]
 
     return syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_choices
 
-def merge_inputs(syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, pad_token_id):
+def merge_inputs(syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, pad_token_id, lang1_id, lang2_id):
 
     num_rows = len(syn_examples['input_ids'])
     num_cols = len(syn_examples['input_ids'][0])
 
     syn_examples['position_ids'] = create_position_ids_from_input_ids(syn_examples['input_ids'], pad_token_id)
     syn_examples["tlm_data"] = [[0] for i in range(num_rows)]
-    syn_examples['lang_type_ids'] = [[1 for _ in range(num_cols)] for i in range(num_rows)]
+    syn_examples['lang_type_ids'] = [[lang2_id for _ in range(num_cols)] for i in range(num_rows)]
 
     if num_sentences > 0:
         orig_examples1['position_ids'] = create_position_ids_from_input_ids(orig_examples1['input_ids'], pad_token_id)
@@ -73,25 +73,30 @@ def merge_inputs(syn_examples, orig_examples1, orig_examples2, examples1, exampl
 
     return syn_examples
 
-def add_lang_and_pos(datasets, pad_token_id):
+def add_lang_and_pos(datasets, pad_token_id, is_synthetic, lang1_id, lang2_id):
+    if is_synthetic:
+        lang_id = lang2_id
+    else:
+        lang_id = lang1_id
+
     if type(datasets) is dict or (type(datasets) is DatasetDict):
         for key in datasets.keys():
-            ncols = len(datasets[key]['input_ids'][0])
+            # ncols = len(datasets[key]['input_ids'][0])
             nrows = len(datasets[key]['input_ids'])
             datasets[key] = datasets[key].add_column(
                 "lang_type_ids",
-                [[0 for _ in range(ncols)] for i in range(nrows)]
+                [[lang_id for _ in range(len(datasets[key]['input_ids'][i]))] for i in range(nrows)]
             )
             datasets[key] = datasets[key].add_column(
                 "position_ids",
                 create_position_ids_from_input_ids(datasets[key]['input_ids'], pad_token_id)
             )
     else:
-        ncols = len(datasets['input_ids'][0])
+        # ncols = len(datasets['input_ids'][0])
         nrows = len(datasets['input_ids'])
         datasets.add_column(
             "lang_type_ids",
-            [[0 for _ in range(ncols)] for i in range(nrows)]
+            [[lang_id for _ in range(len(datasets['input_ids'][i]))] for i in range(nrows)]
         )
         datasets.add_column(
             "position_ids",
@@ -511,7 +516,8 @@ def apply_modifications(data_args, training_args, datasets, task_name, tokenizer
         nonlocal data_args, training_args, datasets, task_name, tokenizer, negative_label
 
         # pdb.set_trace()
-        syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences = split_inputs(examples, data_args.tlm_generation_rate)
+        syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences = \
+        split_inputs(examples, data_args.tlm_generation_rate, tokenizer.pad_token_id+1, tokenizer.pad_token_id+2)
 
         has_mod = False
         if data_args.permute_vocabulary:
@@ -535,13 +541,14 @@ def apply_modifications(data_args, training_args, datasets, task_name, tokenizer
         if not has_mod:
             raise NotImplementedError("Must have a transformation for TLM pretraining!")
 
-        return merge_inputs(syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer.pad_token_id)
+        return merge_inputs(syn_examples, orig_examples1, orig_examples2, examples1, examples2, half_length, num_sentences, tokenizer.pad_token_id, tokenizer.pad_token_id+1, tokenizer.pad_token_id+2)
 
     return create_modified_dataset(data_args, map_function, datasets)
 
 
 def modify_inputs_synthetic(data_args, training_args, datasets, task_name=None, task_type='tlm', tokenizer=None):
-    add_lang_and_pos(datasets, tokenizer.pad_token_id)
+    # NOT SYNTHETIC (hence the false)
+    add_lang_and_pos(datasets, tokenizer.pad_token_id, False, tokenizer.pad_token_id+1, tokenizer.pad_token_id+2)
     add_tlm_data_label(datasets)
 
     if task_type in ['glue', 'xnli', 'ner', 'pos', 'qa', 'tatoeba']:

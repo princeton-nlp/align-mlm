@@ -429,10 +429,10 @@ def main():
             load_from_cache_file=not data_args.overwrite_cache,
         )
         # pdb.set_trace()
-        for i in tokenized_datasets['train']['input_ids'][0]:
-            print(tokenizer.decode([i]))
+        # for i in tokenized_datasets['train']['input_ids'][0]:
+        #     print(tokenizer.decode([i]))
         # asdf = tokenizer.decode(tokenized_datasets['train']['input_ids'][2])
-        pdb.set_trace()
+        # pdb.set_trace()
 
         if data_args.max_seq_length is None:
             max_seq_length = tokenizer.model_max_length
@@ -483,7 +483,7 @@ def main():
         #
         # To speed up this part, we use multiprocessing. See the documentation of the map method for more information:
         # https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.map
-        pdb.set_trace()
+        # pdb.set_trace()
 
         tokenized_datasets = tokenized_datasets.map(
             group_texts,

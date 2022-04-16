@@ -14,13 +14,13 @@ from .synthetic_utils_tlm import create_modified_dataset, add_lang_and_pos
 import pdb
 
 def no_inputs_modification(data_args, training_args, datasets, task_name, tokenizer):
-    add_lang_and_pos(datasets, tokenizer.pad_token_id)
+    add_lang_and_pos(datasets, tokenizer.pad_token_id, tokenizer.pad_token_id+1, tokenizer.pad_token_id+2)
     return datasets
 
-def modify_lang_type_id(examples):
+def modify_lang_type_id(examples, lang1_id, lang2_id):
     num_rows = len(examples['input_ids'])
     num_cols = len(examples['input_ids'][0])
-    examples['lang_type_ids'] = [[1 for _ in range(num_cols)] for i in range(num_rows)]
+    examples['lang_type_ids'] = [[lang2_id for _ in range(num_cols)] for i in range(num_rows)]
 
 # Can ignore this one
 def modify_inputs_permute(data_args, training_args, datasets, task_name):
@@ -233,7 +233,7 @@ def modify_inputs_invert(data_args, training_args, datasets, task_name, tokenize
                 modified_labels = reverse_substr_ner_pos(examples['labels'][j])
                 examples['labels'][j] = [modified_labels[i] for i in range(example_length)]
         
-        modify_lang_type_id(examples)
+        modify_lang_type_id(examples, tokenizer.pad_token_id+1, tokenizer.pad_token_id+2)
         return examples
 
     # Step 2: Return modified dataset
@@ -262,7 +262,7 @@ def modify_inputs_one_to_one_mapping(data_args, training_args, datasets, task_na
             for j in range(num_rows):
                 examples['input_ids'][j] = [examples['input_ids'][j][i] if (examples['input_ids'][j][i] in special_tokens or examples['input_ids'][j][i] in dont_modify) else (examples['input_ids'][j][i] + vocab_size)  for i in range(num_cols)]
             
-            modify_lang_type_id(examples)
+            modify_lang_type_id(examples, tokenizer.pad_token_id+1, tokenizer.pad_token_id+2)
             return examples
         
     else:
@@ -273,7 +273,7 @@ def modify_inputs_one_to_one_mapping(data_args, training_args, datasets, task_na
             for j in range(num_rows):
                 examples['input_ids'][j] = [examples['input_ids'][j][i] if (examples['input_ids'][j][i] in special_tokens) else (examples['input_ids'][j][i] + vocab_size)  for i in range(num_cols)]
             
-            modify_lang_type_id(examples)
+            modify_lang_type_id(examples, tokenizer.pad_token_id+1, tokenizer.pad_token_id+2)
             return examples
 
 
@@ -345,7 +345,7 @@ def modify_inputs_permute_sentence(data_args, training_args, datasets, task_name
                     data['input_ids'][j] = [modified_examples[i] for i in range(l)]
 
         perform_permutation(examples)
-        modify_lang_type_id(examples)
+        modify_lang_type_id(examples, tokenizer.pad_token_id+1, tokenizer.pad_token_id+2)
         return examples
 
     # Step 2: Return modified dataset

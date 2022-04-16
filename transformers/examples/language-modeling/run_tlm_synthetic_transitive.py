@@ -28,6 +28,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 from copy import deepcopy
 import numpy as np
+import pdb
 
 from datasets import load_dataset, concatenate_datasets
 
@@ -48,8 +49,8 @@ from transformers import (
 from transformers.trainer_utils import is_main_process
 
 # Synthetic languages
-from transformers import modify_inputs_synthetic
 from transformers.synthetic_utils import modify_config
+from transformers.synthetic_utils import modify_inputs_synthetic
 
 logger = logging.getLogger(__name__)
 MODEL_CONFIG_CLASSES = list(MODEL_FOR_MASKED_LM_MAPPING.keys())
@@ -102,10 +103,14 @@ class DataTrainingArguments:
         default=None, metadata={"help": "The configuration name of the dataset to use (via the datasets library)."}
     )
     train_file: Optional[str] = field(default=None, metadata={"help": "The input training data file (a text file)."})
-    transitive_file: Optional[str] = field(default=None, metadata={"help": "The input training data file (a text file)."})
+    train_synthetic_file: Optional[str] = field(default=None, metadata={"help": "The syntheticinput training data file (a text file)."})
     validation_file: Optional[str] = field(
         default=None,
         metadata={"help": "An optional input evaluation data file to evaluate the perplexity on (a text file)."},
+    )
+    validation_synthetic_file: Optional[str] = field(
+        default=None,
+        metadata={"help": "A synthetic validation file."},
     )
     data_cache_dir: Optional[str] = field(
         default=None,
@@ -311,8 +316,10 @@ def main():
             data_files["train"] = data_args.train_file
         if data_args.validation_file is not None:
             data_files["validation"] = data_args.validation_file
-        if data_args.transitive_file is not None:
-            data_files["transitive_file"] = data_args.transitive_file
+        if data_args.train_synthetic_file is not None:
+            data_files["train_synthetic"] = data_args.train_synthetic_file
+        if data_args.validation_synthetic_file is not None:
+            data_files["validation_synthetic"] = data_args.validation_synthetic_file
         extension = data_args.train_file.split(".")[-1]
         if extension == "txt":
             extension = "text"
@@ -428,34 +435,23 @@ def main():
         # Main data processing function that will concatenate all texts from our dataset and generate chunks of
         # max_seq_length.
         def group_texts(examples):
-            # Concatenate all texts.
-            concatenated_examples = {k: sum(examples[k], []) for k in examples.keys()}
-            total_length = len(concatenated_examples[list(examples.keys())[0]])
-            # We drop the small remainder, we could add padding if the model supported it instead of this drop, you can
-            # customize this part to your needs.
-            total_length = (total_length // max_seq_length) * max_seq_length
-            # Split by chunks of max_len.
-            result = {
-                k: [t[i : i + max_seq_length] for i in range(0, total_length, max_seq_length)]
-                for k, t in concatenated_examples.items()
-            }
-            return result
+            tokens_per_batch = data_args.max_seq_length
+            pad_index = tokenizer.pad_token_id
 
-        def make_tlm(examples):
-            ### IMPORTANT PARAMETER ###
-            tokens_per_batch = 512
-            pad_index = 0
+            num_elements = len(examples['input_ids'])
+            concatenated = {k: [] for k in examples.keys()}
+            for i in range(num_elements):
+                if len(examples['input_ids'][i]) < 512:
+                    for k in examples.keys():
+                        concatenated[k].extend(examples[k][i])
+            
+            num_pairs = len(examples['input_ids'])
 
-            num_pairs = len(examples['input_ids']//2)
-            lengths1 = np.array([len(examples['input_ids'][i]) for i in range(num_pairs)])
-            lengths2 = np.array([len(examples['input_ids'][i+num_pairs]) for i in range(num_pairs)])
-            lengths = lengths1+lengths2
+            lengths = np.array([len(examples['input_ids'][i]) for i in range(num_pairs)])
 
-            indices = np.cumsum(lengths1)
+            indices = np.cumsum(lengths)
             # Append 0 to beginning of indices
             indices = np.insert(indices, 0, 0)
-
-            concatenated = {k: sum(examples[k], []) for k in examples.keys()}
 
             result = {
                 k: []
@@ -464,30 +460,107 @@ def main():
 
             cur_sum = 0
             prev_idx = 0
-            for i in range(num_pairs):
-                if cur_sum + lengths[i] > tokens_per_batch:
-                    if i == prev_idx:
-                        continue
+            for i in range(0, num_pairs+1):
+                if i == num_pairs or cur_sum + lengths[i] > tokens_per_batch:
                     for k, t in concatenated.items():
-                        data = [pad_index for i in range(tokens_per_batch)]
-                        distance = 2*(indices[i] - indices[prev_idx])
-                        data[-distance:] = t[indices[prev_idx]:indices[i]] + t[indices[prev_idx]+num_pairs:indices[i]+num_pairs]
+                        # pdb.set_trace()
+                        if k != 'attention_mask':
+                            data = [pad_index for _ in range(tokens_per_batch)]
+                        else:
+                            data = [0 for _ in range(tokens_per_batch)] #0 means no attention
+
+                        # We are assuming both things are of the same length
+                        distance = indices[i] - indices[prev_idx]
+
+                        data[0:distance] = t[indices[prev_idx]:indices[i]]
                         result[k].append(data)
+                    
+                    prev_idx = i
+                    cur_sum = 0
+                
+                if i != num_pairs:
+                    cur_sum += lengths[i]
+            # pdb.set_trace()
+
+            an_array = np.array(result['input_ids'])
+            mask = np.not_equal(an_array, tokenizer.pad_token_id)
+            incremental_indices = np.cumsum(mask, axis=1) * mask
+            result['position_ids'] = (incremental_indices.astype(int) + tokenizer.pad_token_id).tolist()
 
             return result
-            # batch_ids = np.cumsum(lengths[indices]) // tokens_per_batch
-            # _, bounds = np.unique(batch_ids, return_index=True)
-            # batches = [indices[bounds[i]:bounds[i + 1]] for i in range(len(bounds) - 1)]
-            # if bounds[-1] < len(indices):
-            #     batches.append(indices[bounds[-1]:])
 
-            # # optionally shuffle batches
-            # if shuffle:
-            #     np.random.shuffle(batches)
+        def make_tlm(examples):
+            ### IMPORTANT PARAMETER ###
+            tokens_per_batch = data_args.max_seq_length
+            pad_index = tokenizer.pad_token_id
 
-            # # sanity checks
-            # assert n_sentences == sum([len(x) for x in batches])
-            # assert lengths[indices].sum() == sum([lengths[x].sum() for x in batches])
+            num_elements = len(examples['input_ids'])
+            concatenated = {k: [] for k in examples.keys()}
+            for i in range(num_elements):
+                if len(examples['input_ids'][i]) < 512:
+                    for k in examples.keys():
+                        concatenated[k].extend(examples[k][i])
+            
+            num_pairs = len(examples['input_ids'])//2
+            num_tokens = len(concatenated['input_ids'])//2
+
+            lengths1 = np.array([len(examples['input_ids'][i]) for i in range(num_pairs)])
+            lengths2 = np.array([len(examples['input_ids'][i+num_pairs]) for i in range(num_pairs)])
+
+            assert np.array_equal(lengths1, lengths2)
+            lengths = lengths1+lengths2
+
+
+            indices = np.cumsum(lengths1)
+            # Append 0 to beginning of indices
+            indices = np.insert(indices, 0, 0)
+
+            result = {
+                k: []
+                for k, t in examples.items()
+            }
+
+            cur_sum = 0
+            prev_idx = 0
+            for i in range(0, num_pairs+1):
+                if i == num_pairs or cur_sum + lengths[i] > tokens_per_batch:
+                    for k, t in concatenated.items():
+                        # pdb.set_trace()
+                        if k != 'attention_mask':
+                            data = [pad_index for _ in range(tokens_per_batch)]
+                        else:
+                            data = [0 for _ in range(tokens_per_batch)] #0 means no attention
+                        
+                        # We are assuming both things are of the same length
+                        distance = indices[i] - indices[prev_idx]
+
+                        assert distance <= max_seq_length//2
+
+                        data[0:distance] = t[indices[prev_idx]:indices[i]]
+                        data[max_seq_length//2:max_seq_length//2+distance] = t[indices[prev_idx]+num_tokens:indices[i]+num_tokens]
+                        result[k].append(data)
+                    
+                    prev_idx = i
+                    cur_sum = 0
+                
+                if i != num_pairs:
+                    cur_sum += lengths[i]
+        
+
+            input_array = np.array(result['input_ids'])
+
+            array1 = input_array[:,0:max_seq_length//2]
+            mask1 = np.not_equal(array1, tokenizer.pad_token_id)
+            incremental_indices1 = np.cumsum(mask1, axis=1) * mask1
+            positions1 = incremental_indices1.astype(int) + tokenizer.pad_token_id
+
+            array2 = input_array[:,0:max_seq_length//2]
+            mask2 = np.not_equal(array2, tokenizer.pad_token_id)
+            incremental_indices2 = np.cumsum(mask2, axis=1) * mask2
+            positions2 = incremental_indices2.astype(int) + tokenizer.pad_token_id
+            result['position_ids'] = np.concatenate((positions1, positions2), axis = 1).tolist()
+
+            return result
 
         # Note that with `batched=True`, this map processes 1,000 texts together, so group_texts throws away a
         # remainder for each of those groups of 1,000 texts. You can adjust that batch_size here but a higher value
@@ -496,34 +569,78 @@ def main():
         # To speed up this part, we use multiprocessing. See the documentation of the map method for more information:
         # https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.map
 
-        assert len(tokenized_datasets['train']['input_ids']) == len(tokenized_datasets['trainsitive_file']['input_ids'])
-        tlm_dataset = {'train': concatenate_datasets([deepcopy(tokenized_datasets['train']), deepcopy(tokenized_datasets["trainsitive_file"])])}
-        
-        tlm_dataset = tlm_dataset.map(
-            make_tlm,
-            batched=True,
-            batch_size=None,
-            num_proc=data_args.preprocessing_num_workers,
-            load_from_cache_file=not data_args.overwrite_cache,
-        )
+        lang1_id = tokenizer.pad_token_id+1
+        lang2_id = tokenizer.pad_token_id+2
 
-        tokenized_datasets = tokenized_datasets.map(
+        data_args.word_modification = 'replace'
+        # if data_args.one_to_one_mapping:
+        for key in tokenized_datasets.keys():
+            if key == 'train_synthetic' or key == 'validation_synthetic':
+                tokenized_datasets[key] = modify_inputs_synthetic(data_args, training_args, tokenized_datasets[key], tokenizer=tokenizer)
+                # modify_inputs_one_to_one_mapping(data_args, training_args, tokenized_datasets[key], "Transliteration", tokenizer)
+
+        # pdb.set_trace()
+        for key in tokenized_datasets.keys():
+            nrows = len(tokenized_datasets[key]['input_ids'])
+            temp_data = tokenized_datasets[key]['input_ids']
+            if key == 'train' or key == 'validation':
+                tokenized_datasets[key] = tokenized_datasets[key].add_column(
+                    "lang_type_ids",
+                    [[lang1_id for _ in range(len(temp_data[i]))] for i in range(nrows)]
+                )
+            else:
+                tokenized_datasets[key] = tokenized_datasets[key].add_column(
+                    "lang_type_ids",
+                    [[lang2_id for _ in range(len(temp_data[i]))] for i in range(nrows)]
+                )
+        
+
+        assert len(tokenized_datasets['train']['input_ids']) == len(tokenized_datasets['train_synthetic']['input_ids'])
+        assert len(tokenized_datasets['validation']['input_ids']) == len(tokenized_datasets['validation_synthetic']['input_ids'])
+        # pdb.set_trace()
+
+        tlm_dataset = {'train': concatenate_datasets([deepcopy(tokenized_datasets['train']), deepcopy(tokenized_datasets["train_synthetic"])]),
+        'validation': concatenate_datasets([deepcopy(tokenized_datasets['validation']), deepcopy(tokenized_datasets['validation_synthetic'])])}
+
+        # pdb.set_trace()
+
+        for k in tlm_dataset:
+            tlm_dataset[k] = tlm_dataset[k].map(
+                make_tlm,
+                batched=True,
+                batch_size=None,
+                num_proc=data_args.preprocessing_num_workers,
+                load_from_cache_file=not data_args.overwrite_cache,
+            )
+
+        # tokenized_datasets = tokenized_datasets.map(
+        #     group_texts,
+        #     batched=True,
+        #     num_proc=data_args.preprocessing_num_workers,
+        #     load_from_cache_file=not data_args.overwrite_cache,
+        # )
+
+    # Make synthetic language modifications if necessary
+    # tokenized_datasets = modify_inputs_synthetic(data_args, training_args, tokenized_datasets, tokenizer=tokenizer)
+    ######################################### Modified #########################################
+    # tokenized_datasets_new = modify_inputs_synthetic(data_args, training_args, tokenized_datasets["transitive_file"], tokenizer=tokenizer)
+    ######################################### Modified #########################################
+    for k in tokenized_datasets:
+        tokenized_datasets[k] = tokenized_datasets[k].map(
             group_texts,
             batched=True,
             num_proc=data_args.preprocessing_num_workers,
             load_from_cache_file=not data_args.overwrite_cache,
         )
 
-    # Make synthetic language modifications if necessary
-    # tokenized_datasets = modify_inputs_synthetic(data_args, training_args, tokenized_datasets, tokenizer=tokenizer)
-    ######################################### Modified #########################################
-    data_args.word_modification = 'replace'
-    tokenized_datasets_new = modify_inputs_synthetic(data_args, training_args, tokenized_datasets["transitive_file"], tokenizer=tokenizer)
-    ######################################### Modified #########################################
+    # pdb.set_trace()
 
     # Combine the two datasets
-    tokenized_datasets = {'train': concatenate_datasets([tokenized_datasets['train'], tokenized_datasets_new]), 'validation': tokenized_datasets['validation']}
+    tokenized_datasets = {'train': concatenate_datasets([tokenized_datasets['train'], tokenized_datasets['train_synthetic'], tlm_dataset['train']]), 
+    'validation': concatenate_datasets([tokenized_datasets['validation'], tokenized_datasets['validation_synthetic'], tlm_dataset['validation']])}
+    # tokenized_datasets = tlm_dataset
 
+    # pdb.set_trace()
     # Data collator
     # This one will take care of randomly masking the tokens.
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm_probability=data_args.mlm_probability)

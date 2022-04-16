@@ -24,7 +24,6 @@ from typing import Optional
 
 import numpy as np
 from datasets import load_dataset, load_metric
-import pdb
 
 import transformers
 from transformers import (
@@ -43,7 +42,8 @@ from transformers import (
 from transformers.trainer_utils import is_main_process
 
 # Synthetic languages
-from transformers.synthetic_utils_with_lang_id import modify_inputs_synthetic
+from transformers import modify_inputs_synthetic
+import pdb
 
 task_to_keys = {
     "cola": ("sentence", None),
@@ -172,7 +172,14 @@ class DataTrainingArguments:
         metadata={
             "help": "Permute the words of the sentence randomly. Different permutation for each sentence."
         },
-    )    
+    )
+    # Dataset is in a synthetic language
+    is_synthetic: bool = field(
+        default=False,
+        metadata={
+            "help": "True if the dataset is in a synthetic (as opposed to the original base) language."
+        },
+    ) 
 
     def __post_init__(self):
         if self.task_name is not None:
@@ -288,7 +295,6 @@ def main():
     # See more about loading any type of standard or custom dataset at
     # https://huggingface.co/docs/datasets/loading_datasets.html.
 
-    pdb.set_trace()
     # Labels
     if data_args.task_name is not None:
         is_regression = data_args.task_name == "stsb"
@@ -384,12 +390,28 @@ def main():
         # Map labels to IDs (not necessary for GLUE tasks)
         if label_to_id is not None and "label" in examples:
             result["label"] = [label_to_id[l] for l in examples["label"]]
+        
+        an_array = np.array(result["input_ids"])
+        mask = np.not_equal(an_array, tokenizer.pad_token_id)
+        incremental_indices = np.cumsum(mask, axis=1) * mask
+        positions = incremental_indices.astype(int) + tokenizer.pad_token_id
+
+        result["position_ids"] = positions
+
+        nrows = len(result['input_ids'])
+        ncols = len(result["input_ids"][0])
+        lang_id = tokenizer.pad_token_id+1 if (data_args.is_synthetic == False) else tokenizer.pad_token_id+2
+        result["lang_type_ids"] = [[lang_id for _ in range(ncols)] for i in range(nrows)]
         return result
+
+    # pdb.set_trace()
 
     datasets = datasets.map(preprocess_function, batched=True, load_from_cache_file=not data_args.overwrite_cache)
 
-    # Make synthetic language modifications if necessary
+    # pdb.set_trace()
+    # # Make synthetic language modifications if necessary
     datasets = modify_inputs_synthetic(data_args, training_args, datasets, task_name=data_args.task_name, task_type='glue', tokenizer=tokenizer)
+    # pdb.set_trace()
 
     train_dataset = datasets["train"]
     eval_dataset = datasets["validation_matched" if data_args.task_name == "mnli" else "validation"]
