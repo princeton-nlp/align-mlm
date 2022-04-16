@@ -74,3 +74,15 @@ nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examp
 
 
 nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_mlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 50 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/pretrain_data/en/train.txt --transitive_file ../../bucket/analysis_data/en/en_syntax_fr_train.txt --validation_file ../../bucket/analysis_data/en/en_syntax_fr_valid.txt --output_dir ../../bucket/model_outputs/en/syntax_en_fr_one_to_one/mlm --run_name syntax_en_fr_one_to_one &
+
+
+
+
+
+#################################################### Transitive #####################################################
+#################################################### Pretraining ####################################################
+# Transliteration, 500K
+nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_tlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_tlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt --train_synthetic_file ../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt --validation_file ../../bucket/henry_syntax_data/en/mono_dep_valid-en~fr@N~fr@V.txt --validation_synthetic_file ../../bucket/henry_syntax_data/en/mono_dep_valid-en~fr@N~fr@V.txt --output_dir ../../bucket/henry_model_outputs/en/transl_en_500K/tlm --run_name transl_en_500K_tlm --one_to_one_mapping --word_modification replace &
+
+# Transliteration + Syntax, 500K
+nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_tlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_tlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt --train_synthetic_file ../../bucket/henry_syntax_data/en/synthetic_dep_train-en~fr@N~fr@V.txt --validation_file ../../bucket/henry_syntax_data/en/mono_dep_valid-en~fr@N~fr@V.txt --validation_synthetic_file ../../bucket/henry_syntax_data/en/synthetic_dep_valid-en~fr@N~fr@V.txt --output_dir ../../bucket/henry_model_outputs/en/transl_synt_en_fr_500K/tlm --run_name transl_synt_en_fr_500K_tlm --one_to_one_mapping --word_modification replace &

@@ -441,7 +441,7 @@ def main():
             num_elements = len(examples['input_ids'])
             concatenated = {k: [] for k in examples.keys()}
             for i in range(num_elements):
-                if len(examples['input_ids'][i]) < 512:
+                if len(examples['input_ids'][i]) < tokens_per_batch:
                     for k in examples.keys():
                         concatenated[k].extend(examples[k][i])
             
@@ -490,26 +490,27 @@ def main():
             return result
 
         def make_tlm(examples):
+            # pdb.set_trace()
             ### IMPORTANT PARAMETER ###
             tokens_per_batch = data_args.max_seq_length
             pad_index = tokenizer.pad_token_id
 
             num_elements = len(examples['input_ids'])
             concatenated = {k: [] for k in examples.keys()}
+            # pdb.set_trace()
             for i in range(num_elements):
-                if len(examples['input_ids'][i]) < 512:
+                if len(examples['input_ids'][i]) < tokens_per_batch//2:
                     for k in examples.keys():
                         concatenated[k].extend(examples[k][i])
             
-            num_pairs = len(examples['input_ids'])//2
-            num_tokens = len(concatenated['input_ids'])//2
+            num_pairs = len(examples['input_ids'])
+            num_tokens = len(concatenated['input_ids'])
 
             lengths1 = np.array([len(examples['input_ids'][i]) for i in range(num_pairs)])
-            lengths2 = np.array([len(examples['input_ids'][i+num_pairs]) for i in range(num_pairs)])
+            lengths2 = np.array([len(examples['input_ids_syn'][i]) for i in range(num_pairs)])
 
             assert np.array_equal(lengths1, lengths2)
             lengths = lengths1+lengths2
-
 
             indices = np.cumsum(lengths1)
             # Append 0 to beginning of indices
@@ -517,14 +518,17 @@ def main():
 
             result = {
                 k: []
-                for k, t in examples.items()
+                for k in col_names
             }
+
+            # pdb.set_trace()
 
             cur_sum = 0
             prev_idx = 0
             for i in range(0, num_pairs+1):
                 if i == num_pairs or cur_sum + lengths[i] > tokens_per_batch:
-                    for k, t in concatenated.items():
+                    # for k, t in concatenated.items():
+                    for k in col_names:
                         # pdb.set_trace()
                         if k != 'attention_mask':
                             data = [pad_index for _ in range(tokens_per_batch)]
@@ -536,8 +540,9 @@ def main():
 
                         assert distance <= max_seq_length//2
 
-                        data[0:distance] = t[indices[prev_idx]:indices[i]]
-                        data[max_seq_length//2:max_seq_length//2+distance] = t[indices[prev_idx]+num_tokens:indices[i]+num_tokens]
+                        # pdb.set_trace()
+                        data[0:distance] = concatenated[k][indices[prev_idx]:indices[i]]
+                        data[max_seq_length//2:max_seq_length//2+distance] = concatenated[f"{k}_syn"][indices[prev_idx]:indices[i]]
                         result[k].append(data)
                     
                     prev_idx = i
@@ -546,7 +551,7 @@ def main():
                 if i != num_pairs:
                     cur_sum += lengths[i]
         
-
+            # pdb.set_trace()
             input_array = np.array(result['input_ids'])
 
             array1 = input_array[:,0:max_seq_length//2]
@@ -560,6 +565,7 @@ def main():
             positions2 = incremental_indices2.astype(int) + tokenizer.pad_token_id
             result['position_ids'] = np.concatenate((positions1, positions2), axis = 1).tolist()
 
+            # pdb.set_trace()
             return result
 
         # Note that with `batched=True`, this map processes 1,000 texts together, so group_texts throws away a
@@ -599,20 +605,36 @@ def main():
         assert len(tokenized_datasets['validation']['input_ids']) == len(tokenized_datasets['validation_synthetic']['input_ids'])
         # pdb.set_trace()
 
-        tlm_dataset = {'train': concatenate_datasets([deepcopy(tokenized_datasets['train']), deepcopy(tokenized_datasets["train_synthetic"])]),
-        'validation': concatenate_datasets([deepcopy(tokenized_datasets['validation']), deepcopy(tokenized_datasets['validation_synthetic'])])}
+        col_names = tokenized_datasets['train'].column_names
+        col_names_syn = [f"{c}_syn" for c in col_names]
+        # pdb.set_trace()
+        # tlm_dataset = {'train': concatenate_datasets([deepcopy(tokenized_datasets['train']), deepcopy(tokenized_datasets["train_synthetic"])]),
+        # 'validation': concatenate_datasets([deepcopy(tokenized_datasets['validation']), deepcopy(tokenized_datasets['validation_synthetic'])])}
+        tlm_datasets = {'train': deepcopy(tokenized_datasets['train']), 'validation': deepcopy(tokenized_datasets['validation'])}
+
+        # pdb.set_trace()
+        for key in tlm_datasets.keys():
+            # key = 'train' or 'validation'
+            for col in col_names:
+                tlm_datasets[key] = tlm_datasets[key].add_column(
+                    f"{col}_syn",
+                    deepcopy(tokenized_datasets[f"{key}_synthetic"][col])
+                )
 
         # pdb.set_trace()
 
-        for k in tlm_dataset:
-            tlm_dataset[k] = tlm_dataset[k].map(
+        for k in tlm_datasets:
+            # pdb.set_trace()
+            tlm_datasets[k] = tlm_datasets[k].map(
                 make_tlm,
                 batched=True,
-                batch_size=None,
+                remove_columns=col_names_syn,
+                # batch_size=None,
                 num_proc=data_args.preprocessing_num_workers,
                 load_from_cache_file=not data_args.overwrite_cache,
             )
 
+        # pdb.set_trace()
         # tokenized_datasets = tokenized_datasets.map(
         #     group_texts,
         #     batched=True,
@@ -636,8 +658,8 @@ def main():
     # pdb.set_trace()
 
     # Combine the two datasets
-    tokenized_datasets = {'train': concatenate_datasets([tokenized_datasets['train'], tokenized_datasets['train_synthetic'], tlm_dataset['train']]), 
-    'validation': concatenate_datasets([tokenized_datasets['validation'], tokenized_datasets['validation_synthetic'], tlm_dataset['validation']])}
+    tokenized_datasets = {'train': concatenate_datasets([tokenized_datasets['train'], tokenized_datasets['train_synthetic'], tlm_datasets['train']]), 
+    'validation': concatenate_datasets([tokenized_datasets['validation'], tokenized_datasets['validation_synthetic'], tlm_datasets['validation']])}
     # tokenized_datasets = tlm_dataset
 
     # pdb.set_trace()

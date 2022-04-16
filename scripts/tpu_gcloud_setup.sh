@@ -36,24 +36,26 @@ function MountBucket {
 
 function MakeTPUs {
     export VERSION=1.11
-    gcloud compute tpus create h-tpu-1 --zone=us-central1-a --network=default --version=pytorch-1.11 --accelerator-type=v3-8
+    gcloud compute tpus create h-tpu-2 --zone=us-central1-a --network=default --version=pytorch-1.11 --accelerator-type=v3-8
     gcloud compute tpus list --zone=us-central1-a
-    export TPU_IP_ADDRESS=10.19.14.114
+    # gcloud compute tpus create h-tpu-1 --zone=us-central1-a --network=default --version=pytorch-1.11 --accelerator-type=v3-8
+    # gcloud compute tpus list --zone=us-central1-a
+    export TPU_IP_ADDRESS=10.66.116.210
     export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
 }
 
 # TPU List
 ############### h-exp-1 ###############
-# export TPU_IP_ADDRESS=10.19.14.114
+# export TPU_IP_ADDRESS=10.58.244.242
 ############### h-exp-2 ###############
-# export TPU_IP_ADDRESS=10.106.179.50
+# export TPU_IP_ADDRESS=10.66.116.210
 
 function RestartVM {
     conda activate multilingual
     gcsfuse --implicit-dirs --debug_fuse multilingual-1  bucket/
     export VERSION=1.11
     gcloud compute tpus list --zone=us-central1-a
-    export TPU_IP_ADDRESS=10.19.14.114
+    export TPU_IP_ADDRESS=10.66.116.210
     export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
     cd source_code/MultilingualModelAnalysis/
     git pull
