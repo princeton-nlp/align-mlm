@@ -93,6 +93,9 @@ nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examp
 
 
 
+# python transformers/examples/language-modeling/run_tlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_tlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file sample_data/valid_orig_full.txt --train_synthetic_file sample_data/valid_inv_full.txt --validation_file sample_data/valid_orig_full.txt --validation_synthetic_file sample_data/valid_inv_full.txt --output_dir data/test --run_name transl_inv_en_500K_tlm --one_to_one_mapping --word_modification replace
+
+
 
 
 # nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_tlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_tlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 5000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt --train_synthetic_file ../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt --validation_file ../../bucket/henry_syntax_data/en/mono_dep_valid-en~fr@N~fr@V.txt --validation_synthetic_file ../../bucket/henry_syntax_data/en/mono_dep_valid-en~fr@N~fr@V.txt --output_dir ../../bucket/henry_model_outputs/en/transl_en_500K/tlm --run_name transl_en_500K_tlm --one_to_one_mapping --word_modification replace &

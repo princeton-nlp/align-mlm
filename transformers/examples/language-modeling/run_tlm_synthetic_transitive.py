@@ -440,14 +440,16 @@ def main():
 
             num_elements = len(examples['input_ids'])
             concatenated = {k: [] for k in examples.keys()}
+            lengths = []
+
             for i in range(num_elements):
                 if len(examples['input_ids'][i]) < tokens_per_batch:
                     for k in examples.keys():
                         concatenated[k].extend(examples[k][i])
+                    lengths.append(len(examples['input_ids'][i]))
             
-            num_pairs = len(examples['input_ids'])
-
-            lengths = np.array([len(examples['input_ids'][i]) for i in range(num_pairs)])
+            num_pairs = len(lengths)
+            lengths = np.array(lengths)
 
             indices = np.cumsum(lengths)
             # Append 0 to beginning of indices
@@ -457,6 +459,10 @@ def main():
                 k: []
                 for k, t in examples.items()
             }
+            result['position_ids'] = []
+
+            if np.shape(lengths)[0] == 0:
+                return result
 
             cur_sum = 0
             prev_idx = 0
@@ -472,7 +478,10 @@ def main():
                         # We are assuming both things are of the same length
                         distance = indices[i] - indices[prev_idx]
 
-                        data[0:distance] = t[indices[prev_idx]:indices[i]]
+                        try:
+                            data[0:distance] = t[indices[prev_idx]:indices[i]]
+                        except:
+                            pdb.set_trace()
                         result[k].append(data)
                     
                     prev_idx = i
@@ -480,8 +489,8 @@ def main():
                 
                 if i != num_pairs:
                     cur_sum += lengths[i]
-            # pdb.set_trace()
 
+            # pdb.set_trace()
             an_array = np.array(result['input_ids'])
             mask = np.not_equal(an_array, tokenizer.pad_token_id)
             incremental_indices = np.cumsum(mask, axis=1) * mask
@@ -497,36 +506,45 @@ def main():
 
             num_elements = len(examples['input_ids'])
             concatenated = {k: [] for k in examples.keys()}
+            lengths1 = []
+            lengths2 = []
+
             # pdb.set_trace()
             for i in range(num_elements):
-                if len(examples['input_ids'][i]) < tokens_per_batch//2:
+                if len(examples['input_ids'][i]) < tokens_per_batch//2 and len(examples['input_ids_syn'][i]) < tokens_per_batch//2:
                     for k in examples.keys():
                         concatenated[k].extend(examples[k][i])
+                    lengths1.append(len(examples['input_ids'][i]))
+                    lengths2.append(len(examples['input_ids_syn'][i]))
             
-            num_pairs = len(examples['input_ids'])
+            num_pairs = len(lengths1)
             num_tokens = len(concatenated['input_ids'])
 
-            lengths1 = np.array([len(examples['input_ids'][i]) for i in range(num_pairs)])
-            lengths2 = np.array([len(examples['input_ids_syn'][i]) for i in range(num_pairs)])
+            lengths1 = np.array(lengths1)
+            lengths2 = np.array(lengths2)
 
-            assert np.array_equal(lengths1, lengths2)
-            lengths = lengths1+lengths2
-
-            indices = np.cumsum(lengths1)
+            indices1 = np.cumsum(lengths1)
+            indices2 = np.cumsum(lengths2)
             # Append 0 to beginning of indices
-            indices = np.insert(indices, 0, 0)
+            indices1 = np.insert(indices1, 0, 0)
+            indices2 = np.insert(indices2, 0, 0)
 
             result = {
                 k: []
                 for k in col_names
             }
+            result['position_ids'] = []
+
+            if np.shape(lengths1)[0] == 0 or np.shape(lengths2)[0] == 0:
+                return result
 
             # pdb.set_trace()
 
-            cur_sum = 0
+            cur_sum1 = 0
+            cur_sum2 = 0
             prev_idx = 0
             for i in range(0, num_pairs+1):
-                if i == num_pairs or cur_sum + lengths[i] > tokens_per_batch:
+                if i == num_pairs or cur_sum1 + lengths1[i] > tokens_per_batch//2 or cur_sum2 + lengths2[i] > tokens_per_batch//2:
                     # for k, t in concatenated.items():
                     for k in col_names:
                         # pdb.set_trace()
@@ -536,36 +554,38 @@ def main():
                             data = [0 for _ in range(tokens_per_batch)] #0 means no attention
                         
                         # We are assuming both things are of the same length
-                        distance = indices[i] - indices[prev_idx]
+                        distance1 = indices1[i] - indices1[prev_idx]
+                        distance2 = indices2[i] - indices2[prev_idx]
 
-                        assert distance <= max_seq_length//2
+                        assert distance1 <= tokens_per_batch//2
+                        assert distance2 <= tokens_per_batch//2
 
                         # pdb.set_trace()
-                        data[0:distance] = concatenated[k][indices[prev_idx]:indices[i]]
-                        data[max_seq_length//2:max_seq_length//2+distance] = concatenated[f"{k}_syn"][indices[prev_idx]:indices[i]]
+                        data[0:distance1] = concatenated[k][indices1[prev_idx]:indices1[i]]
+                        data[tokens_per_batch//2:tokens_per_batch//2+distance2] = concatenated[f"{k}_syn"][indices2[prev_idx]:indices2[i]]
                         result[k].append(data)
                     
                     prev_idx = i
-                    cur_sum = 0
+                    cur_sum1 = 0
+                    cur_sum2 = 0
                 
                 if i != num_pairs:
-                    cur_sum += lengths[i]
+                    cur_sum1 += lengths1[i]
+                    cur_sum2 += lengths2[i]
         
             # pdb.set_trace()
             input_array = np.array(result['input_ids'])
 
-            array1 = input_array[:,0:max_seq_length//2]
+            array1 = input_array[:,0:tokens_per_batch//2]
             mask1 = np.not_equal(array1, tokenizer.pad_token_id)
             incremental_indices1 = np.cumsum(mask1, axis=1) * mask1
             positions1 = incremental_indices1.astype(int) + tokenizer.pad_token_id
 
-            array2 = input_array[:,0:max_seq_length//2]
+            array2 = input_array[:,tokens_per_batch//2:]
             mask2 = np.not_equal(array2, tokenizer.pad_token_id)
             incremental_indices2 = np.cumsum(mask2, axis=1) * mask2
             positions2 = incremental_indices2.astype(int) + tokenizer.pad_token_id
             result['position_ids'] = np.concatenate((positions1, positions2), axis = 1).tolist()
-
-            # pdb.set_trace()
             return result
 
         # Note that with `batched=True`, this map processes 1,000 texts together, so group_texts throws away a
@@ -579,7 +599,6 @@ def main():
         lang2_id = tokenizer.pad_token_id+2
 
         data_args.word_modification = 'replace'
-        # if data_args.one_to_one_mapping:
         for key in tokenized_datasets.keys():
             if key == 'train_synthetic' or key == 'validation_synthetic':
                 tokenized_datasets[key] = modify_inputs_synthetic(data_args, training_args, tokenized_datasets[key], tokenizer=tokenizer)
@@ -608,8 +627,6 @@ def main():
         col_names = tokenized_datasets['train'].column_names
         col_names_syn = [f"{c}_syn" for c in col_names]
         # pdb.set_trace()
-        # tlm_dataset = {'train': concatenate_datasets([deepcopy(tokenized_datasets['train']), deepcopy(tokenized_datasets["train_synthetic"])]),
-        # 'validation': concatenate_datasets([deepcopy(tokenized_datasets['validation']), deepcopy(tokenized_datasets['validation_synthetic'])])}
         tlm_datasets = {'train': deepcopy(tokenized_datasets['train']), 'validation': deepcopy(tokenized_datasets['validation'])}
 
         # pdb.set_trace()
@@ -634,14 +651,6 @@ def main():
                 load_from_cache_file=not data_args.overwrite_cache,
             )
 
-        # pdb.set_trace()
-        # tokenized_datasets = tokenized_datasets.map(
-        #     group_texts,
-        #     batched=True,
-        #     num_proc=data_args.preprocessing_num_workers,
-        #     load_from_cache_file=not data_args.overwrite_cache,
-        # )
-
     # Make synthetic language modifications if necessary
     # tokenized_datasets = modify_inputs_synthetic(data_args, training_args, tokenized_datasets, tokenizer=tokenizer)
     ######################################### Modified #########################################
@@ -660,7 +669,6 @@ def main():
     # Combine the two datasets
     tokenized_datasets = {'train': concatenate_datasets([tokenized_datasets['train'], tokenized_datasets['train_synthetic'], tlm_datasets['train']]), 
     'validation': concatenate_datasets([tokenized_datasets['validation'], tokenized_datasets['validation_synthetic'], tlm_datasets['validation']])}
-    # tokenized_datasets = tlm_dataset
 
     # pdb.set_trace()
     # Data collator
