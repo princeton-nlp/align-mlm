@@ -50,8 +50,9 @@ for i in range(len(input_files)):
         for jsonObj in f:
             orig_sentences.append(json.loads(jsonObj))
 
-    print("Printing each JSON Decoded Object")
-    end_tokens = ['.', '?', '!']
+    for i in range(len(orig_sentences)):
+        orig_sentences[i]['sentence1'] = orig_sentences[i]['sentence1'].strip()
+        orig_sentences[i]['sentence2'] = orig_sentences[i]['sentence2'].strip()
 
     # pdb.set_trace()
     syn_sentences = deepcopy(orig_sentences)
@@ -60,6 +61,7 @@ for i in range(len(input_files)):
         syn_sentences[i]['sentence1'] = invert(syn_sentences[i]['sentence1'])
         syn_sentences[i]['sentence2'] = invert(syn_sentences[i]['sentence2'])
 
+    print("Printing each JSON Decoded Object")
     with open(output_orig_file, 'w') as f:
         for s in orig_sentences:
             json.dump(s, f)
