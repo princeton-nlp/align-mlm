@@ -87,11 +87,15 @@ nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examp
 # Transliteration + Syntax, 500K
 nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_tlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_tlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt --train_synthetic_file ../../bucket/henry_syntax_data/en/synthetic_dep_train-en~fr@N~fr@V.txt --validation_file ../../bucket/henry_syntax_data/en/mono_dep_valid-en~fr@N~fr@V.txt --validation_synthetic_file ../../bucket/henry_syntax_data/en/synthetic_dep_valid-en~fr@N~fr@V.txt --output_dir ../../bucket/henry_model_outputs/en/transl_synt_en_fr_500K/tlm --run_name transl_synt_en_fr_500K_tlm --one_to_one_mapping --word_modification replace &
 
+# Transliteration + Invert, 500K
+nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_tlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_tlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/henry_invert_data/pretrain/en/train_orig.txt --train_synthetic_file ../../bucket/henry_invert_data/pretrain/en/train_inv.txt --validation_file ../../bucket/henry_invert_data/pretrain/en/valid_orig.txt --validation_synthetic_file ../../bucket/henry_invert_data/pretrain/en/valid_inv.txt --output_dir ../../bucket/henry_model_outputs/en/transl_inv_en_500K/tlm --run_name transl_inv_en_500K_tlm --one_to_one_mapping --word_modification replace &
 
 
 
 
-nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_tlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_tlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 5000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt --train_synthetic_file ../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt --validation_file ../../bucket/henry_syntax_data/en/mono_dep_valid-en~fr@N~fr@V.txt --validation_synthetic_file ../../bucket/henry_syntax_data/en/mono_dep_valid-en~fr@N~fr@V.txt --output_dir ../../bucket/henry_model_outputs/en/transl_en_500K/tlm --run_name transl_en_500K_tlm --one_to_one_mapping --word_modification replace &
+
+
+# nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_tlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_tlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 5000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt --train_synthetic_file ../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt --validation_file ../../bucket/henry_syntax_data/en/mono_dep_valid-en~fr@N~fr@V.txt --validation_synthetic_file ../../bucket/henry_syntax_data/en/mono_dep_valid-en~fr@N~fr@V.txt --output_dir ../../bucket/henry_model_outputs/en/transl_en_500K/tlm --run_name transl_en_500K_tlm --one_to_one_mapping --word_modification replace &
 
 
 
@@ -101,8 +105,8 @@ nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examp
 
 # ALL FILES
 ../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt
-../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt
 ../../bucket/henry_syntax_data/en/synthetic_dep_train-en~fr@N~fr@V.txt
+../../bucket/henry_syntax_data/en/mono_dep_valid-en~fr@N~fr@V.txt
 ../../bucket/henry_syntax_data/en/synthetic_dep_valid-en~fr@N~fr@V.txt
 
 ../../bucket/pretrain_data/en/train.txt
@@ -113,9 +117,9 @@ nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examp
 ../../bucket/henry_invert_data/pretrain/en/valid_orig.txt
 ../../bucket/henry_invert_data/pretrain/en/valid_inv.txt
 
-../../bucket/henry_model_outputs/en/transl_500K/tlm
-../../bucket/henry_model_outputs/en/transl_invert_500K/tlm
-../../bucket/henry_model_outputs/en/transl_syntax_500K/tlm
+../../bucket/henry_model_outputs/en/transl_en_500K/tlm
+../../bucket/henry_model_outputs/en/transl_inv_en_500K/tlm
+../../bucket/henry_model_outputs/en/transl_synt_en_fr_500K/tlm
 
 
 # XNLI
@@ -130,12 +134,12 @@ nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examp
 ../../bucket/henry_invert_data/xnli/en/dev_en_orig.json
 ../../bucket/henry_invert_data/xnli/en/dev_en_inv.json
 
-../../bucket/henry_model_outputs/en/transl_500K/xnli/orig
-../../bucket/henry_model_outputs/en/transl_500K/xnli/deriv
-../../bucket/henry_model_outputs/en/transl_invert_500K/xnli/orig
-../../bucket/henry_model_outputs/en/transl_invert_500K/xnli/deriv
-../../bucket/henry_model_outputs/en/transl_syntax_500K/xnli/orig
-../../bucket/henry_model_outputs/en/transl_syntax_500K/xnli/deriv
+../../bucket/henry_model_outputs/en/transl_en_500K/xnli/orig
+../../bucket/henry_model_outputs/en/transl_en_500K/xnli/deriv
+../../bucket/henry_model_outputs/en/transl_inv_en_500K/xnli/orig
+../../bucket/henry_model_outputs/en/transl_inv_en_500K/xnli/deriv
+../../bucket/henry_model_outputs/en/transl_synt_en_fr_500K/xnli/orig
+../../bucket/henry_model_outputs/en/transl_synt_en_fr_500K/xnli/deriv
 
 
 # NER
@@ -150,12 +154,12 @@ nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examp
 ../../bucket/henry_invert_data/ner/en/dev_en_orig.json
 ../../bucket/henry_invert_data/ner/en/dev_en_inv.json
 
-../../bucket/henry_model_outputs/en/transl_500K/ner/orig
-../../bucket/henry_model_outputs/en/transl_500K/ner/deriv
-../../bucket/henry_model_outputs/en/transl_invert_500K/ner/orig
-../../bucket/henry_model_outputs/en/transl_invert_500K/ner/deriv
-../../bucket/henry_model_outputs/en/transl_syntax_500K/ner/orig
-../../bucket/henry_model_outputs/en/transl_syntax_500K/ner/deriv
+../../bucket/henry_model_outputs/en/transl_en_500K/ner/orig
+../../bucket/henry_model_outputs/en/transl_en_500K/ner/deriv
+../../bucket/henry_model_outputs/en/transl_inv_en_500K/ner/orig
+../../bucket/henry_model_outputs/en/transl_inv_en_500K/ner/deriv
+../../bucket/henry_model_outputs/en/transl_synt_en_fr_500K/ner/orig
+../../bucket/henry_model_outputs/en/transl_synt_en_fr_500K/ner/deriv
 
 # POS
 ../../bucket/supervised_data/pos/en/train-en.json
@@ -169,9 +173,9 @@ nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examp
 ../../bucket/henry_invert_data/pos/en/dev_en_orig.json
 ../../bucket/henry_invert_data/pos/en/dev_en_inv.json
 
-../../bucket/henry_model_outputs/en/transl_500K/pos/orig
-../../bucket/henry_model_outputs/en/transl_500K/pos/deriv
-../../bucket/henry_model_outputs/en/transl_invert_500K/pos/orig
-../../bucket/henry_model_outputs/en/transl_invert_500K/pos/deriv
-../../bucket/henry_model_outputs/en/transl_syntax_500K/pos/orig
-../../bucket/henry_model_outputs/en/transl_syntax_500K/pos/deriv
+../../bucket/henry_model_outputs/en/transl_en_500K/pos/orig
+../../bucket/henry_model_outputs/en/transl_en_500K/pos/deriv
+../../bucket/henry_model_outputs/en/transl_inv_en_500K/pos/orig
+../../bucket/henry_model_outputs/en/transl_inv_en_500K/pos/deriv
+../../bucket/henry_model_outputs/en/transl_synt_en_fr_500K/pos/orig
+../../bucket/henry_model_outputs/en/transl_synt_en_fr_500K/pos/deriv

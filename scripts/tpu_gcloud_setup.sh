@@ -49,6 +49,8 @@ function MakeTPUs {
 # export TPU_IP_ADDRESS=10.58.244.242
 ############### h-exp-2 ###############
 # export TPU_IP_ADDRESS=10.66.116.210
+############### h-exp-3 ###############
+# export TPU_IP_ADDRESS=10.119.46.154
 
 function RestartVM {
     conda activate multilingual

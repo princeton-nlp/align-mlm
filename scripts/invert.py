@@ -1,18 +1,20 @@
-import nltk
-from nltk.tokenize.treebank import TreebankWordDetokenizer
 from copy import deepcopy
-nltk.download('punkt')
+from iteration_utilities import split
+import pdb
 
-# with open("MultilingualAnalysis/sample_data/train.txt") as f:
-#     for line in f:
-#         process_lines(line)
 in_files = ["../../bucket/pretrain_data/en/train.txt", "../../bucket/pretrain_data/en/valid.txt"]
 out_syn_files = ["../../bucket/henry_invert_data/pretrain/en/train_inv.txt", "../../bucket/henry_invert_data/pretrain/en/valid_inv.txt"]
 out_orig_files = ["../../bucket/henry_invert_data/pretrain/en/train_orig.txt", "../../bucket/henry_invert_data/pretrain/en/valid_orig.txt"]
 
+# in_files = ["../sample_data/valid.txt"]
+# out_syn_files = ["../sample_data/valid_inv.txt"]
+# out_orig_files = ["../sample_data/valid_orig.txt"]
+
 # in_files = ["../../bucket/pretrain_data/en/valid.txt"]
 # out_syn_files = ["../../bucket/henry_invert_data/pretrain/en/valid_inv.txt"]
 # out_orig_files = ["../../bucket/henry_invert_data/pretrain/en/valid_orig.txt"]
+
+end_chars = ['.', '!', '?']
 
 for i in range(len(in_files)):
     in_file = in_files[i]
@@ -31,24 +33,17 @@ for i in range(len(in_files)):
     ori_sentences = []
     syn_sentences = []
 
+    # data = []
     for t in text:
-        sent_text = nltk.sent_tokenize(t) # this gives us a list of sentences
-        # now loop over each sentence and tokenize it separately
-        if t == '':
-            syn_sentences.append('')
-            ori_sentences.append('')
-        for sentence in sent_text:
-            tokenized_text = nltk.word_tokenize(sentence)
-            ori_tokenized_text = deepcopy(tokenized_text)
-            if (tokenized_text[-1] == '.' or tokenized_text[-1] == '?' or tokenized_text[-1] == '!'):
-                tokenized_text[:-1] = tokenized_text[:-1][::-1]
+        data = list(split(t.split(' '), lambda x: x in end_chars, keep_before=True))
+        for d in data:
+            ori_sentences.append(" ".join(d))
+            inv_d = deepcopy(d)
+            if inv_d[-1] in end_chars:
+                inv_d[:-1] = inv_d[:-1][::-1]
             else:
-                tokenized_text = tokenized_text[::-1]
-            syn_sentences.append(TreebankWordDetokenizer().detokenize(tokenized_text))
-            ori_sentences.append(TreebankWordDetokenizer().detokenize(ori_tokenized_text))
-
-    # for s in sentences:
-    #     print(s)
+                inv_d = inv_d[::-1]
+            syn_sentences.append(" ".join(inv_d))
 
     with open(out_syn_file, 'w') as f:
         f.write('\n'.join(syn_sentences))

@@ -1,4 +1,4 @@
-{"sentence1": "And he said, Mama, I'm home.", "sentence2": "He called his mom as soon as the school bus dropped him off.", "label": "neutral"}
+{"sentence1": "And he said, Mama, I'm home", "sentence2": "He called his mom as soon as the school bus dropped him off.", "label": "neutral"}
 {"sentence1": "And he said, Mama, I'm home.", "sentence2": "He didn't say a word.", "label": "contradiction"}
 {"sentence1": "And he said, Mama, I'm home.", "sentence2": "He told his mom he had gotten home.", "label": "entailment"}
 {"sentence1": "I didn't know what I was going for or anything, so was to report to a designated place in Washington.", "sentence2": "I have never been to Washington so when I was assigned there I got lost trying to find the place.", "label": "neutral"}
