@@ -1,0 +1,22 @@
+{"tokens": ["Sioux", "Falls", "Arena", "(", "Sioux", "Falls", ",", "South", "Dakota", ")"], "ner_tags": ["B-ORG", "I-ORG", "I-ORG", "O", "B-LOC", "I-LOC", "I-LOC", "I-LOC", "I-LOC", "O"]}
+{"tokens": ["George", "Randolph", "Hearst", ",", "Jr", "."], "ner_tags": ["B-PER", "I-PER", "I-PER", "I-PER", "I-PER", "I-PER"]}
+{"tokens": ["Conch", "Key", ",", "Florida"], "ner_tags": ["B-LOC", "I-LOC", "I-LOC", "I-LOC"]}
+{"tokens": ["Fairground]]", "''", "by", "Simply", "Red", "''", "Bad", "Romance", "''", "by", "Lady", "Gaga"], "ner_tags": ["O", "O", "O", "B-ORG", "I-ORG", "O", "B-ORG", "I-ORG", "O", "O", "B-PER", "I-PER"]}
+{"tokens": ["The", "Game]]", ",", "Ice", "Cube", ",", "Dr.", "Dre"], "ner_tags": ["O", "O", "O", "B-PER", "I-PER", "O", "B-PER", "I-PER"]}
+{"tokens": ["Zina", "Garrison-Jackson", "''", "(", "Third", "Round", ")"], "ner_tags": ["B-ORG", "I-ORG", "O", "O", "O", "O", "O"]}
+{"tokens": ["'", "''", "Bruno", "Ruffo", "''", "'"], "ner_tags": ["O", "O", "B-PER", "I-PER", "O", "O"]}
+{"tokens": ["He", "formerly", "played", "for", "Almere", "City", "and", "Chiangrai", "United", "."], "ner_tags": ["O", "O", "O", "O", "B-ORG", "I-ORG", "O", "B-ORG", "I-ORG", "O"]}
+{"tokens": [",", "Crail", ",", "Fife"], "ner_tags": ["O", "B-LOC", "O", "B-LOC"]}
+{"tokens": ["Panam\u00e1", "(", "3", ")"], "ner_tags": ["B-LOC", "O", "O", "O"]}
+{"tokens": ["**Monarch", "\u2013", "Adolphe", "(", "1890\u20131905", ")"], "ner_tags": ["O", "O", "B-PER", "O", "O", "O"]}
+{"tokens": ["His", "work", "has", "been", "compared", "to", "Tom", "Clancy", "and", "Mario", "Puzo", "."], "ner_tags": ["O", "O", "O", "O", "O", "O", "B-PER", "I-PER", "O", "B-PER", "I-PER", "O"]}
+{"tokens": ["The", "Edinburgh", "Rector", "is", ",", "uniquely", ",", "elected", "by", "both", "staff", "and", "students", "."], "ner_tags": ["O", "B-PER", "I-PER", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]}
+{"tokens": ["Fireball", "Cinnamon", "Whisky"], "ner_tags": ["B-ORG", "I-ORG", "I-ORG"]}
+{"tokens": ["Sringeri", "Sharada", "Peetham"], "ner_tags": ["B-ORG", "I-ORG", "I-ORG"]}
+{"tokens": ["'", "''", "Dwayne", "Smith", "''", "'"], "ner_tags": ["O", "O", "B-PER", "I-PER", "O", "O"]}
+{"tokens": ["Sydney", "Thompson", "Dobell"], "ner_tags": ["B-PER", "I-PER", "I-PER"]}
+{"tokens": ["He", "moved", "to", "Rome", "in", "1566", "."], "ner_tags": ["O", "O", "O", "B-LOC", "O", "O", "O"]}
+{"tokens": ["La", "Puebla", "de", "Cazalla"], "ner_tags": ["B-LOC", "I-LOC", "I-LOC", "I-LOC"]}
+{"tokens": ["Parodius", "(", "series", ")"], "ner_tags": ["B-ORG", "I-ORG", "I-ORG", "I-ORG"]}
+{"tokens": ["River", "Plate", "(", "no", "rank", ")"], "ner_tags": ["B-ORG", "I-ORG", "O", "O", "O", "O"]}
+{"tokens": ["Antiochus", "III", "of", "Commagene", "(", "died", "17", ")", ",", "reigned", "12", "BC-17"], "ner_tags": ["B-PER", "I-PER", "I-PER", "I-PER", "O", "O", "O", "O", "O", "O", "O", "O"]}

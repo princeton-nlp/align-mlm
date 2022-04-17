@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Fine-tuning the library models for token classification.
+This file is to be used only for inverted order and permutation NER Evaluation.
+Use run_ner_synthetic.py for everything else.
 """
 # You can also adapt this script on your own token classification task and datasets. Pointers for this are left as
 # comments.
@@ -23,6 +24,8 @@ import os
 import sys
 from dataclasses import dataclass, field
 from typing import Optional
+import copy
+import pdb
 
 import numpy as np
 from datasets import ClassLabel, load_dataset
@@ -376,6 +379,8 @@ def main():
         tokenized_inputs["labels"] = labels
         return tokenized_inputs
 
+    pdb.set_trace()
+
     tokenized_datasets = datasets.map(
         tokenize_and_align_labels,
         batched=True,
@@ -385,6 +390,49 @@ def main():
 
     # Make synthetic language modifications if necessary
     tokenized_datasets = modify_inputs_synthetic(data_args, training_args, tokenized_datasets, tokenizer=tokenizer, task_name=data_args.task_name, task_type=data_args.task_name)
+
+    def make_labels_consistent(examples):
+        inv_label_to_id = {v: k for k, v in label_to_id.items()}
+        B_labels = [label_to_id[key] for key in label_to_id.keys() if 'B' in key]
+        I_labels = [label_to_id[key] for key in label_to_id.keys() if 'I' in key]
+        B_to_I = dict([(label_to_id['B-'+suffix.split('-')[-1]], label_to_id['I-'+suffix.split('-')[-1]]) for suffix in label_to_id.keys() if 'B' in suffix])
+        I_to_B = dict([(label_to_id['I-'+suffix.split('-')[-1]], label_to_id['B-'+suffix.split('-')[-1]]) for suffix in label_to_id.keys() if 'B' in suffix])
+        for i in range(len(examples['labels'])):
+            new_labels = copy.deepcopy(examples['labels'][i])
+            flag = False
+            prev_suffix = None
+            for j in range(len(new_labels)):
+                if examples['labels'][i][j] < 0:
+                    continue
+                if examples['labels'][i][j] not in I_labels and examples['labels'][i][j] not in B_labels:
+                    flag = False
+                    prev_suffix = None
+                elif not flag and examples['labels'][i][j] in I_labels:
+                    examples['labels'][i][j] = I_to_B[examples['labels'][i][j]]
+                    flag = True
+                    prev_suffix = inv_label_to_id[examples['labels'][i][j]].split('-')[-1]
+                elif not flag and examples['labels'][i][j] in B_labels:
+                    flag = True
+                    prev_suffix = inv_label_to_id[examples['labels'][i][j]].split('-')[-1]
+                elif flag and examples['labels'][i][j] in B_labels and prev_suffix == inv_label_to_id[examples['labels'][i][j]].split('-')[-1]:
+                    examples['labels'][i][j] = B_to_I[examples['labels'][i][j]]
+                elif flag and examples['labels'][i][j] in B_labels and prev_suffix != inv_label_to_id[examples['labels'][i][j]].split('-')[-1]:
+                    prev_suffix = inv_label_to_id[examples['labels'][i][j]].split('-')[-1]
+                elif flag and examples['labels'][i][j] in I_labels and prev_suffix != inv_label_to_id[examples['labels'][i][j]].split('-')[-1]:
+                    examples['labels'][i][j] = I_to_B[examples['labels'][i][j]]
+                    prev_suffix = inv_label_to_id[examples['labels'][i][j]].split('-')[-1]                    
+        return examples
+
+    pdb.set_trace()
+    # Make sure the NER labels are consistent
+    for key in tokenized_datasets.keys():
+        tokenized_datasets[key] = tokenized_datasets[key].map(
+            make_labels_consistent,
+            batched=True,
+            num_proc=data_args.preprocessing_num_workers,
+            load_from_cache_file=not data_args.overwrite_cache,
+        )
+    pdb.set_trace()
 
     # Data collator
     data_collator = DataCollatorForTokenClassification(tokenizer)

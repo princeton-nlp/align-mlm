@@ -40,7 +40,7 @@ function MakeTPUs {
     gcloud compute tpus list --zone=us-central1-a
     # gcloud compute tpus create h-tpu-1 --zone=us-central1-a --network=default --version=pytorch-1.11 --accelerator-type=v3-8
     # gcloud compute tpus list --zone=us-central1-a
-    export TPU_IP_ADDRESS=10.66.116.210
+    export TPU_IP_ADDRESS=10.58.244.242
     export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
 }
 
@@ -55,7 +55,7 @@ function RestartVM {
     gcsfuse --implicit-dirs --debug_fuse multilingual-1  bucket/
     export VERSION=1.11
     gcloud compute tpus list --zone=us-central1-a
-    export TPU_IP_ADDRESS=10.66.116.210
+    export TPU_IP_ADDRESS=10.58.244.242
     export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
     cd source_code/MultilingualModelAnalysis/
     git pull

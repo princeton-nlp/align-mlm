@@ -1,0 +1,27 @@
+{"sentence1": "And he said, Mama, I'm home.", "sentence2": "He called his mom as soon as the school bus dropped him off.", "label": "neutral"}
+{"sentence1": "And he said, Mama, I'm home.", "sentence2": "He didn't say a word.", "label": "contradiction"}
+{"sentence1": "And he said, Mama, I'm home.", "sentence2": "He told his mom he had gotten home.", "label": "entailment"}
+{"sentence1": "I didn't know what I was going for or anything, so was to report to a designated place in Washington.", "sentence2": "I have never been to Washington so when I was assigned there I got lost trying to find the place.", "label": "neutral"}
+{"sentence1": "I didn't know what I was going for or anything, so was to report to a designated place in Washington.", "sentence2": "I knew exactly what I needed to do as I marched to Washington.", "label": "contradiction"}
+{"sentence1": "I didn't know what I was going for or anything, so was to report to a designated place in Washington.", "sentence2": "I was not quite certain what I was going to do so I went to Washington where I was assigned to report.", "label": "entailment"}
+{"sentence1": "He didn't get to go.", "sentence2": "He was the first to be invited and enjoyed the experience.", "label": "contradiction"}
+{"sentence1": "He didn't get to go.", "sentence2": "He wasn't allowed to attend.", "label": "entailment"}
+{"sentence1": "He didn't get to go.", "sentence2": "He wasn't allowed to go to the museum's opening.", "label": "neutral"}
+{"sentence1": "And I was like OK, and that was it!", "sentence2": "After I said yes, it ended.", "label": "entailment"}
+{"sentence1": "And I was like OK, and that was it!", "sentence2": "I said no and it dragged on and on.", "label": "contradiction"}
+{"sentence1": "And I was like OK, and that was it!", "sentence2": "When I said yes, we decided that we would get married that day.", "label": "neutral"}
+{"sentence1": "I was just there just trying to figure it out.", "sentence2": "I understood it well from the beginning.", "label": "contradiction"}
+{"sentence1": "I was just there just trying to figure it out.", "sentence2": "I was trying to understand where the money went.", "label": "neutral"}
+{"sentence1": "I was just there just trying to figure it out.", "sentence2": "I was trying to understand.", "label": "entailment"}
+{"sentence1": "And, uh, they kind of actually stopped visiting the family because they were just, just determined that they were going to be white.", "sentence2": "They continued to visit every day.", "label": "contradiction"}
+{"sentence1": "And, uh, they kind of actually stopped visiting the family because they were just, just determined that they were going to be white.", "sentence2": "They didn't visit the family anymore.", "label": "entailment"}
+{"sentence1": "And, uh, they kind of actually stopped visiting the family because they were just, just determined that they were going to be white.", "sentence2": "They stopped visiting the family when the racial tensions started.", "label": "neutral"}
+{"sentence1": "And Granny used to tell the story about how her sister and her sister's husband decided that they were going to move to the city, to Augusta, and pass for white.", "sentence2": "Granny's Sister was white and moved to Texas.", "label": "contradiction"}
+{"sentence1": "And Granny used to tell the story about how her sister and her sister's husband decided that they were going to move to the city, to Augusta, and pass for white.", "sentence2": "Granny's sister was not white.", "label": "entailment"}
+{"sentence1": "And Granny used to tell the story about how her sister and her sister's husband decided that they were going to move to the city, to Augusta, and pass for white.", "sentence2": "Granny's sister wasn't white but she wanted to be so she could go to school.", "label": "neutral"}
+{"sentence1": "Michael Santo of, of Firewell and Company, of Buffalo, NY, they was the one that uh, manufactured, uh, invented the high O2 regulator before that they built fire control on the stove well.", "sentence2": "Santo lived in New York and worked on the high O2 regulator.", "label": "entailment"}
+{"sentence1": "Michael Santo of, of Firewell and Company, of Buffalo, NY, they was the one that uh, manufactured, uh, invented the high O2 regulator before that they built fire control on the stove well.", "sentence2": "Santo specialized in fire safety because it was an issue that was dear to him.", "label": "neutral"}
+{"sentence1": "Michael Santo of, of Firewell and Company, of Buffalo, NY, they was the one that uh, manufactured, uh, invented the high O2 regulator before that they built fire control on the stove well.", "sentence2": "Santo worked for Disney and operated the tea cups.", "label": "contradiction"}
+{"sentence1": "But he was, you know, in a lot of ways, just like a plantation owner's son because he was the son of this guy who owned a lot of property.", "sentence2": "His dad had never owned anything in his life.", "label": "contradiction"}
+{"sentence1": "But he was, you know, in a lot of ways, just like a plantation owner's son because he was the son of this guy who owned a lot of property.", "sentence2": "His dad owned 2000 acres of farmland.", "label": "neutral"}
+{"sentence1": "But he was, you know, in a lot of ways, just like a plantation owner's son because he was the son of this guy who owned a lot of property.", "sentence2": "His dad owned a lot of property.", "label": "entailment"}
