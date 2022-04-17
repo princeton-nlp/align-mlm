@@ -7,7 +7,7 @@ nltk.download('punkt')
 
 input_files = ['../../bucket/supervised_data/xnli/en/train_en.json', '../../bucket/supervised_data/xnli/en/dev_en.json']
 output_orig_files = ['../../bucket/henry_invert_data/xnli/en/train_en_orig.json', '../../bucket/henry_invert_data/xnli/en/dev_en_orig.json']
-output_syn_files = ['../../bucket/henry_invert_data/ner/en/train_en_inv.json', '../../bucket/henry_invert_data/ner/en/dev_en_inv.json']
+output_syn_files = ['../../bucket/henry_invert_data/xnli/en/train_en_inv.json', '../../bucket/henry_invert_data/xnli/en/dev_en_inv.json']
 
 def invert(sentence):
     tokenized_text = nltk.word_tokenize(sentence)

@@ -111,7 +111,7 @@ class DataTrainingArguments:
         metadata={"help": "The number of processes to use for the preprocessing."},
     )
     pad_to_max_length: bool = field(
-        default=False,
+        default=True,
         metadata={
             "help": "Whether to pad all samples to model maximum sentence length. "
             "If False, will pad the samples dynamically when batching to the maximum length in the batch. More "
@@ -196,6 +196,13 @@ class DataTrainingArguments:
             "help": "Permute the words of the sentence randomly. Different permutation for each sentence."
         },
     )
+    # Dataset is in a synthetic language	
+    is_synthetic: bool = field(	
+        default=False,	
+        metadata={	
+            "help": "True if the dataset is in a synthetic (as opposed to the original base) language."	
+        },	
+    ) 
 
     def __post_init__(self):
         if self.dataset_name is None and self.train_file is None and self.validation_file is None:
@@ -349,6 +356,7 @@ def main():
 
     # Tokenize all texts and align the labels with them.
     def tokenize_and_align_labels(examples):
+        # pdb.set_trace()
         tokenized_inputs = tokenizer(
             examples[text_column_name],
             padding=padding,
@@ -356,6 +364,7 @@ def main():
             # We use this argument because the texts in our dataset are lists of words (with a label for each word).
             is_split_into_words=True,
         )
+        # pdb.set_trace()
         labels = []
         for i, label in enumerate(examples[label_column_name]):
             word_ids = tokenized_inputs.word_ids(batch_index=i)
@@ -377,9 +386,23 @@ def main():
 
             labels.append(label_ids)
         tokenized_inputs["labels"] = labels
+
+        an_array = np.array(tokenized_inputs["input_ids"])
+        mask = np.not_equal(an_array, tokenizer.pad_token_id)
+        incremental_indices = np.cumsum(mask, axis=1) * mask
+        positions = incremental_indices.astype(int) + tokenizer.pad_token_id
+
+        tokenized_inputs["position_ids"] = positions.tolist()
+
+        nrows = len(tokenized_inputs['input_ids'])
+        ncols = len(tokenized_inputs["input_ids"][0])
+        lang_labels = np.full((nrows, ncols), tokenizer.pad_token_id)
+        lang_id = tokenizer.pad_token_id+1 if (data_args.is_synthetic == False) else tokenizer.pad_token_id+2
+        lang_labels[mask] = lang_id
+        tokenized_inputs["lang_type_ids"] = lang_labels.tolist()
         return tokenized_inputs
 
-    pdb.set_trace()
+    # pdb.set_trace()
 
     tokenized_datasets = datasets.map(
         tokenize_and_align_labels,
@@ -387,6 +410,8 @@ def main():
         num_proc=data_args.preprocessing_num_workers,
         load_from_cache_file=not data_args.overwrite_cache,
     )
+
+    # pdb.set_trace()
 
     # Make synthetic language modifications if necessary
     tokenized_datasets = modify_inputs_synthetic(data_args, training_args, tokenized_datasets, tokenizer=tokenizer, task_name=data_args.task_name, task_type=data_args.task_name)
@@ -423,16 +448,16 @@ def main():
                     prev_suffix = inv_label_to_id[examples['labels'][i][j]].split('-')[-1]                    
         return examples
 
-    pdb.set_trace()
+    # pdb.set_trace()
     # Make sure the NER labels are consistent
-    for key in tokenized_datasets.keys():
-        tokenized_datasets[key] = tokenized_datasets[key].map(
-            make_labels_consistent,
-            batched=True,
-            num_proc=data_args.preprocessing_num_workers,
-            load_from_cache_file=not data_args.overwrite_cache,
-        )
-    pdb.set_trace()
+    # for key in tokenized_datasets.keys():
+    #     tokenized_datasets[key] = tokenized_datasets[key].map(
+    #         make_labels_consistent,
+    #         batched=True,
+    #         num_proc=data_args.preprocessing_num_workers,
+    #         load_from_cache_file=not data_args.overwrite_cache,
+    #     )
+    # pdb.set_trace()
 
     # Data collator
     data_collator = DataCollatorForTokenClassification(tokenizer)

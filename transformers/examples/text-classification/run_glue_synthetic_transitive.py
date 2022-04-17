@@ -396,12 +396,14 @@ def main():
         incremental_indices = np.cumsum(mask, axis=1) * mask
         positions = incremental_indices.astype(int) + tokenizer.pad_token_id
 
-        result["position_ids"] = positions
+        result["position_ids"] = positions.tolist()
 
         nrows = len(result['input_ids'])
         ncols = len(result["input_ids"][0])
+        lang_labels = np.full((nrows, ncols), tokenizer.pad_token_id)
         lang_id = tokenizer.pad_token_id+1 if (data_args.is_synthetic == False) else tokenizer.pad_token_id+2
-        result["lang_type_ids"] = [[lang_id for _ in range(ncols)] for i in range(nrows)]
+        lang_labels[mask] = lang_id
+        result["lang_type_ids"] = lang_labels.tolist()
         return result
 
     # pdb.set_trace()
