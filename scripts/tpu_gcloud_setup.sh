@@ -36,10 +36,8 @@ function MountBucket {
 
 function MakeTPUs {
     export VERSION=1.11
-    gcloud compute tpus create h-tpu-2 --zone=us-central1-a --network=default --version=pytorch-1.11 --accelerator-type=v3-8
+    gcloud compute tpus create h-tpu-1 --zone=us-central1-a --network=default --version=pytorch-1.11 --accelerator-type=v3-8
     gcloud compute tpus list --zone=us-central1-a
-    # gcloud compute tpus create h-tpu-1 --zone=us-central1-a --network=default --version=pytorch-1.11 --accelerator-type=v3-8
-    # gcloud compute tpus list --zone=us-central1-a
     export TPU_IP_ADDRESS=10.58.244.242
     export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
 }
@@ -51,6 +49,8 @@ function MakeTPUs {
 # export TPU_IP_ADDRESS=10.66.116.210
 ############### h-exp-3 ###############
 # export TPU_IP_ADDRESS=10.119.46.154
+############### h-exp-4 ###############
+# export TPU_IP_ADDRESS=10.115.14.194	
 
 function RestartVM {
     conda activate multilingual

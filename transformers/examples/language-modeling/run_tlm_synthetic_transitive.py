@@ -343,6 +343,7 @@ def main():
         config = CONFIG_MAPPING[model_args.model_type]()
         logger.warning("You are instantiating a new config instance from scratch.")
 
+    # pdb.set_trace()
     if model_args.tokenizer_name:
         tokenizer = AutoTokenizer.from_pretrained(
             model_args.tokenizer_name, cache_dir=model_args.cache_dir, use_fast=model_args.use_fast_tokenizer
@@ -478,10 +479,7 @@ def main():
                         # We are assuming both things are of the same length
                         distance = indices[i] - indices[prev_idx]
 
-                        try:
-                            data[0:distance] = t[indices[prev_idx]:indices[i]]
-                        except:
-                            pdb.set_trace()
+                        data[0:distance] = t[indices[prev_idx]:indices[i]]
                         result[k].append(data)
                     
                     prev_idx = i
