@@ -450,13 +450,16 @@ def main():
 
     # pdb.set_trace()
     # Make sure the NER labels are consistent
-    for key in tokenized_datasets.keys():
-        tokenized_datasets[key] = tokenized_datasets[key].map(
-            make_labels_consistent,
-            batched=True,
-            num_proc=data_args.preprocessing_num_workers,
-            load_from_cache_file=not data_args.overwrite_cache,
-        )
+    # pdb.set_trace()
+    if data_args.task_name == "ner":
+        for key in tokenized_datasets.keys():
+            tokenized_datasets[key] = tokenized_datasets[key].map(
+                make_labels_consistent,
+                batched=True,
+                num_proc=data_args.preprocessing_num_workers,
+                load_from_cache_file=not data_args.overwrite_cache,
+            )
+    # pdb.set_trace()
     # pdb.set_trace()
 
     # Data collator
