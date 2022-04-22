@@ -9,7 +9,7 @@ synthetic_info=("" "--one_to_one_mapping --word_modification replace --is_synthe
 
 task=("xnli" "ner" "pos")
 
-run_name="transl_inv_en_500K"
+run_name="transl_inv_en_500K_tlm"
 state=("_orig" "_deriv")
 
 #################################################### Finetuning ####################################################

@@ -415,7 +415,7 @@ def main():
 
     # Make synthetic language modifications if necessary
     tokenized_datasets = modify_inputs_synthetic(data_args, training_args, tokenized_datasets, tokenizer=tokenizer, task_name=data_args.task_name, task_type=data_args.task_name)
-
+    
     def make_labels_consistent(examples):
         inv_label_to_id = {v: k for k, v in label_to_id.items()}
         B_labels = [label_to_id[key] for key in label_to_id.keys() if 'B' in key]
@@ -450,13 +450,13 @@ def main():
 
     # pdb.set_trace()
     # Make sure the NER labels are consistent
-    # for key in tokenized_datasets.keys():
-    #     tokenized_datasets[key] = tokenized_datasets[key].map(
-    #         make_labels_consistent,
-    #         batched=True,
-    #         num_proc=data_args.preprocessing_num_workers,
-    #         load_from_cache_file=not data_args.overwrite_cache,
-    #     )
+    for key in tokenized_datasets.keys():
+        tokenized_datasets[key] = tokenized_datasets[key].map(
+            make_labels_consistent,
+            batched=True,
+            num_proc=data_args.preprocessing_num_workers,
+            load_from_cache_file=not data_args.overwrite_cache,
+        )
     # pdb.set_trace()
 
     # Data collator
