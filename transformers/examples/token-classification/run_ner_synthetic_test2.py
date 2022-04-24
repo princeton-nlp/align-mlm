@@ -261,7 +261,7 @@ def main():
     logger.info("Training/evaluation parameters %s", training_args)
 
     # Set seed before initializing model.
-    set_seed(training_args.seed)
+    set_seed(training_args.seed+1)
 
     # Get the datasets: you can either provide your own CSV/JSON/TXT training and evaluation files (see below)
     # or just provide the name of one of the public datasets available on the hub at https://huggingface.co/datasets/
@@ -451,7 +451,7 @@ def main():
     # pdb.set_trace()
     # Make sure the NER labels are consistent
     # pdb.set_trace()
-    if data_args.task_name == "ner" and data_args.is_synthetic:
+    if data_args.task_name == "ner":
         # pdb.set_trace()
         for key in tokenized_datasets.keys():
             tokenized_datasets[key] = tokenized_datasets[key].map(
