@@ -201,8 +201,8 @@ class DataTrainingArguments:
         default=False,	
         metadata={	
             "help": "True if the dataset is in a synthetic (as opposed to the original base) language."	
-        },	
-    ) 
+        },
+    )
 
     def __post_init__(self):
         if self.dataset_name is None and self.train_file is None and self.validation_file is None:
@@ -451,16 +451,15 @@ def main():
     # pdb.set_trace()
     # Make sure the NER labels are consistent
     # pdb.set_trace()
-    if data_args.task_name == "ner" and data_args.is_synthetic:
-        # pdb.set_trace()
-        for key in tokenized_datasets.keys():
-            tokenized_datasets[key] = tokenized_datasets[key].map(
-                make_labels_consistent,
-                batched=True,
-                num_proc=data_args.preprocessing_num_workers,
-                load_from_cache_file=not data_args.overwrite_cache,
-            )
-    # pdb.set_trace()
+    # if data_args.task_name == "ner" and data_args.make_consistent:
+    #     # pdb.set_trace()
+    #     for key in tokenized_datasets.keys():
+    #         tokenized_datasets[key] = tokenized_datasets[key].map(
+    #             make_labels_consistent,
+    #             batched=True,
+    #             num_proc=data_args.preprocessing_num_workers,
+    #             load_from_cache_file=not data_args.overwrite_cache,
+    #         )
     # pdb.set_trace()
 
     # Data collator

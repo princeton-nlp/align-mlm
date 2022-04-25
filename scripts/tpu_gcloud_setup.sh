@@ -52,7 +52,7 @@ function MakeTPUs {
 ############### h-exp-4 ###############
 # export TPU_IP_ADDRESS=10.115.14.194	
 ############### h-exp-5 ###############
-# export TPU_IP_ADDRESS=10.109.147.218
+# export TPU_IP_ADDRESS=10.109.147.218 # USED FOR MLM #
 
 function RestartVM {
     conda activate multilingual

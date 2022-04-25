@@ -1,0 +1,70 @@
+{"tokens": [")", "MW", "968", "(", ")", "River", "Lawrence", "St.", "(", "Saunders", "R.H."], "ner_tags": ["O", "O", "O", "O", "O", "I-ORG", "I-ORG", "B-ORG", "O", "I-ORG", "B-ORG"]}
+{"tokens": ["'", "''", "Lindstr\u00f6m", "Anders", "''", "'", ";"], "ner_tags": ["O", "O", "I-PER", "B-PER", "O", "O", "O"]}
+{"tokens": [")", "1968", "born", "(", "Knausg\u00e5rd", "Ove", "Karl"], "ner_tags": ["O", "O", "O", "O", "I-PER", "I-PER", "B-PER"]}
+{"tokens": ["Jersey", "New", ",", "City", "Atlantic"], "ner_tags": ["I-LOC", "I-LOC", "I-LOC", "I-LOC", "B-LOC"]}
+{"tokens": [")", "1837\u20131930", "(", "Wagner", "Cosima", "\u2013-", "Liszt", "Franz", "to", "liaison", "her", "them\u2014from", "among", ",", "children", "several", "to", "birth", "gave", "turn", "in", "who", ",", ")", "1805\u20131876", "(", "d'Agoult", "Marie", "was", "marriage", "second", "the", "from", "daughter", "Her", "."], "ner_tags": ["O", "O", "O", "I-PER", "B-PER", "O", "I-PER", "B-PER", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "I-PER", "B-PER", "O", "O", "O", "O", "O", "O", "O", "O"]}
+{"tokens": [")", "Ohio", ",", "Sandusky", "(", "Church", "Catholic", "'s", "Mary", "St."], "ner_tags": ["I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "B-ORG"]}
+{"tokens": ["''", "Tell", "n't", "Do", "...", "Shhh"], "ner_tags": ["O", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "B-ORG"]}
+{"tokens": [")", "1970\u201372", "(", "R\u00fdgr", "Anton\u00edn"], "ner_tags": ["O", "O", "O", "I-PER", "B-PER"]}
+{"tokens": ["2015", "in", "Fame", "of", "Hall", "Hockey", "States", "United", "the", "into", "*Inducted"], "ner_tags": ["O", "O", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "B-ORG", "O", "O", "O"]}
+{"tokens": ["Malek", "Tatjana", "Pfizenmaier", "Dinah", "Casta\u00f1o", "Catalina", "Evtimova", "Dia"], "ner_tags": ["I-PER", "B-PER", "I-PER", "B-PER", "I-PER", "B-PER", "I-PER", "B-PER"]}
+{"tokens": ["ABC", "\u2013", "J", "Triple", "MHz", "102.7"], "ner_tags": ["B-ORG", "O", "I-ORG", "B-ORG", "O", "O"]}
+{"tokens": ["5", "Highway", "State", "Idaho", "*20px"], "ner_tags": ["I-ORG", "I-ORG", "I-ORG", "B-ORG", "O"]}
+{"tokens": ["1884", ",", "Meyrick", "''", "Atelocentra", "''"], "ner_tags": ["O", "O", "O", "O", "B-LOC", "O"]}
+{"tokens": ["'", "''", "prion", "Antarctic", "''", "'"], "ner_tags": ["O", "O", "I-LOC", "B-LOC", "O", "O"]}
+{"tokens": ["M.F.A", "(", "Franco", "James", "."], "ner_tags": ["O", "O", "I-PER", "B-PER", "O"]}
+{"tokens": ["Avondale", "and", "Clarence", "of", "Duke", ",", "Victor", "Albert", "Prince"], "ner_tags": ["I-PER", "I-PER", "I-PER", "I-PER", "I-PER", "I-PER", "I-PER", "I-PER", "B-PER"]}
+{"tokens": ["''", "Murder", "with", "Away", "Get", "to", "How"], "ner_tags": ["O", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "B-ORG"]}
+{"tokens": ["Tregosa", "e", "Durr\u00e3es"], "ner_tags": ["I-LOC", "I-LOC", "B-LOC"]}
+{"tokens": ["station", "tube", "Cross", "Brent"], "ner_tags": ["I-ORG", "I-ORG", "I-ORG", "B-ORG"]}
+{"tokens": ["2006", ",", "17", "January", "on", "Quinchas", "las", "de", "Serran\u00eda", "the", "in", "recorded", "First", "."], "ner_tags": ["O", "O", "O", "O", "O", "I-LOC", "I-LOC", "I-LOC", "B-LOC", "O", "O", "O", "O", "O"]}
+{"tokens": ["Party", "Freedom", "Civic"], "ner_tags": ["I-ORG", "I-ORG", "B-ORG"]}
+{"tokens": [")", "1788", ",", "Esper", "(", "''", "togata", "Xanthia", "\u2014", "\u30ad\u30a4\u30ed\u30ad\u30ea\u30ac"], "ner_tags": ["O", "O", "O", "O", "O", "O", "I-LOC", "B-LOC", "O", "O"]}
+{"tokens": ["Breslow", "Craig", "\u2013", "8", "*August"], "ner_tags": ["I-PER", "B-PER", "O", "O", "O"]}
+{"tokens": ["twice", "Open", "Senior", "Japan", "the", "won", "also", "has", "He", "."], "ner_tags": ["O", "I-ORG", "I-ORG", "B-ORG", "O", "O", "O", "O", "O", "O"]}
+{"tokens": ["Stillman", "Whit", "director", "is", "great-grandson", "His", "."], "ner_tags": ["I-PER", "B-PER", "O", "O", "O", "O", "O"]}
+{"tokens": ["''", "'", "''", "Chauliodus", "''", "'", "''"], "ner_tags": ["O", "O", "O", "B-ORG", "O", "O", "O"]}
+{"tokens": ["Balasubrahmanyam", "P.", "S.", ",", "Janaki]]"], "ner_tags": ["I-PER", "I-PER", "B-PER", "O", "O"]}
+{"tokens": ["''", "''4-games-to-3", "Waxers", "Markham", "defeated", "'", "''", "Islanders", "Thornhill", "''", "'", ":"], "ner_tags": ["O", "O", "I-ORG", "B-ORG", "O", "O", "O", "I-ORG", "B-ORG", "O", "O", "O"]}
+{"tokens": ["Peirce", "Juliette", "of", "Obituary", "."], "ner_tags": ["I-PER", "B-PER", "O", "O", "O"]}
+{"tokens": ["Osnabr\u00fcck", "in", "''", "78", "."], "ner_tags": ["B-LOC", "O", "O", "O", "O"]}
+{"tokens": ["Albani", "Girolamo", "Gian"], "ner_tags": ["I-PER", "I-PER", "B-PER"]}
+{"tokens": ["3:15", "-", ")", "Weiss", "Larry", "(", "''", "Cowboy", "Rhinestone", "``"], "ner_tags": ["O", "O", "O", "I-PER", "B-PER", "O", "O", "I-ORG", "B-ORG", "O"]}
+{"tokens": ["Conlan", "Michael", "-", "9", "*Episode"], "ner_tags": ["I-PER", "B-PER", "O", "O", "O"]}
+{"tokens": [")", "28", "(", "Jamison", "Antawn"], "ner_tags": ["O", "O", "O", "I-PER", "B-PER"]}
+{"tokens": [")", "League", "Prospect", "the", "joined", ",", "1993\u20132008", "(", "Paints", "Chillicothe"], "ner_tags": ["O", "I-ORG", "B-ORG", "O", "O", "O", "O", "O", "I-ORG", "B-ORG"]}
+{"tokens": ["Hauteserre", "de", "Dadin", "Antoine"], "ner_tags": ["I-PER", "I-PER", "I-PER", "B-PER"]}
+{"tokens": ["''", "'", ")", "Anthony-Rodriguez", "Philip", "by", "portrayed", "(", "Brother", "Fifth", "''", "'", ":"], "ner_tags": ["O", "O", "O", "I-PER", "B-PER", "O", "O", "O", "O", "O", "O", "O", "O"]}
+{"tokens": ["Champs-sur-Marne", "de", "Ch\u00e2teau"], "ner_tags": ["I-ORG", "I-ORG", "B-ORG"]}
+{"tokens": ["Nations", "United", "the", "of", "Secretary-General"], "ner_tags": ["I-LOC", "I-LOC", "I-LOC", "I-LOC", "B-LOC"]}
+{"tokens": [")", "2001", "(", "''", ")", "Edition", "Special", "(", "Wall", "the", "Off", "on", "released", "demo", "1978"], "ner_tags": ["O", "O", "O", "O", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "B-ORG", "O", "O", "O", "O"]}
+{"tokens": [")", "Town", "New", "Shui", "Fanling-Sheung", "of", "Extension", "(", "Town", "New", "Fanling", "North"], "ner_tags": ["O", "I-LOC", "I-LOC", "I-LOC", "B-LOC", "O", "O", "O", "I-LOC", "I-LOC", "I-LOC", "B-LOC"]}
+{"tokens": ["7\u20135", ",", "6\u20133", ",", "Witth\u00f6ft", "Carina"], "ner_tags": ["O", "O", "O", "O", "I-PER", "B-PER"]}
+{"tokens": ["Clara", "Santa", "CCStaClara.JPG|Through", ":", "File"], "ner_tags": ["I-LOC", "B-LOC", "O", "O", "O"]}
+{"tokens": ["District", "National", "Eveno-Bytantaysky"], "ner_tags": ["I-LOC", "I-LOC", "B-LOC"]}
+{"tokens": [")", "1889", ",", "Staudinger", "(", "''", "centralis", "Euxoa", "''"], "ner_tags": ["O", "O", "O", "O", "O", "O", "I-ORG", "B-ORG", "O"]}
+{"tokens": ["Tuxtla", "Andr\u00e9s", "San", "of", "Diocese"], "ner_tags": ["I-LOC", "I-LOC", "I-LOC", "I-LOC", "B-LOC"]}
+{"tokens": ["York", "New", ",", "Palisades"], "ner_tags": ["I-LOC", "I-LOC", "I-LOC", "B-LOC"]}
+{"tokens": [")", "1962", "born", "(", "Powell", "Rosephanye"], "ner_tags": ["O", "O", "O", "O", "I-PER", "B-PER"]}
+{"tokens": ["District", "Bong", "Ta", "Chum"], "ner_tags": ["I-LOC", "I-LOC", "I-LOC", "B-LOC"]}
+{"tokens": ["''", "Oblivion", "to", "Consign", "\u2013", "Epica"], "ner_tags": ["O", "I-ORG", "I-ORG", "B-ORG", "O", "B-ORG"]}
+{"tokens": ["episodes", ")", "series", "radio", "1990", "(", "Flywheel", "and", ",", "Shyster", ",", "Flywheel", "of", "List"], "ner_tags": ["I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "B-ORG"]}
+{"tokens": [")", "1813", ",", "H\u00fcbner", "(", "''", "rivata", "Epirrhoe", "''"], "ner_tags": ["O", "O", "O", "O", "O", "O", "I-LOC", "B-LOC", "O"]}
+{"tokens": [":", "''", "Elite", "League", "Justice", "''", "**"], "ner_tags": ["O", "O", "I-ORG", "I-ORG", "B-ORG", "O", "O"]}
+{"tokens": ["Peru", "in", "found", "is", "It", "."], "ner_tags": ["B-LOC", "O", "O", "O", "O", "O"]}
+{"tokens": ["population", "the", "of", "%", "7", ":", "Ecuador", "**"], "ner_tags": ["O", "O", "O", "O", "O", "O", "B-LOC", "O"]}
+{"tokens": ["Kansas", ",", "Park", "Overland", ",", "KCCV-FM", "of", "Translator"], "ner_tags": ["I-LOC", "I-LOC", "I-LOC", "B-LOC", "O", "B-ORG", "O", "O"]}
+{"tokens": ["Vall\u00e9e", "Brigitte", "Mrs", "."], "ner_tags": ["I-PER", "B-PER", "O", "O"]}
+{"tokens": ["County", "Ciechan\u00f3w", ",", "Lipiny"], "ner_tags": ["I-LOC", "I-LOC", "I-LOC", "B-LOC"]}
+{"tokens": ["Trankov", "Maxim", "/", "Volosozhar", "Tatiana"], "ner_tags": ["I-PER", "B-PER", "O", "I-PER", "B-PER"]}
+{"tokens": ["Ontario", ",", "East", "Markville", "\u2013", "Raymerville"], "ner_tags": ["I-LOC", "I-LOC", "I-LOC", "I-LOC", "I-LOC", "B-LOC"]}
+{"tokens": [")", "1493\u20131546", "(", "Maxwell", "Lord", "5th", ",", "Maxwell", "Robert"], "ner_tags": ["O", "O", "O", "I-PER", "I-PER", "I-PER", "I-PER", "I-PER", "B-PER"]}
+{"tokens": ["1682", "November", "19", "\u2013", "1672", "August", "15", "Rhine", "the", "of", "Rupert", "Prince"], "ner_tags": ["O", "O", "O", "O", "O", "O", "O", "I-PER", "I-PER", "I-PER", "I-PER", "B-PER"]}
+{"tokens": ["Slovensko", "spolo\u010dnos\u0165", "\u017delezni\u010dn\u00e1"], "ner_tags": ["I-ORG", "I-ORG", "B-ORG"]}
+{"tokens": ["1938", "in", "Santiago", "in", "died", "and", "duty", "active", "from", "retired", "he", "1925", ",", "6", "February", "On", "."], "ner_tags": ["O", "O", "B-LOC", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]}
+{"tokens": ["wins", "16", "just", "with", "season", "OHL", "2012\u201313", "the", "in", "place", "last", "in", "finished", "'s", "67", "The", "."], "ner_tags": ["O", "O", "O", "O", "I-ORG", "I-ORG", "B-ORG", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]}
+{"tokens": [")", "IXP", "(", "Point", "Exchange", "Internet"], "ner_tags": ["O", "O", "O", "I-ORG", "I-ORG", "B-ORG"]}
+{"tokens": ["''", "Mono", "na", "Y\u014d", "no", "Ketsuron", "Kihazukashii", "Yaya", "no", "de", "Ue", "Kangaeta", "ka", "Nan-nichi", "ni", "Bokunari", ",", "ka", "no", "Shimau", "Kawatte", "D\u014d", "wa", "Kankei", "no", "Bokutachi", "Shimattara", "Itte", "to", "''", "Miru", "ni", "Yume", "o", "Hohoemi", "no", "Kimi", "``", "de", "Michi", "no", "Ki", "no", "Suzukake", "``"], "ner_tags": ["O", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "B-ORG", "O"]}
+{"tokens": ["1990", "since", "Smith", "Curt", "and", "Orzabal", "Roland", "members", "original", "both", "features", "that", "single", "first", "the", "is", "and", "''", "Ending", "Happy", "a", "Loves", "Everybody", "album", "2004", "their", "from", "single", "first", "the", "as", "released", "was", "It", "."], "ner_tags": ["O", "O", "I-PER", "B-PER", "O", "I-PER", "B-PER", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "I-ORG", "I-ORG", "I-ORG", "I-ORG", "B-ORG", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]}
+{"tokens": [")", "Cameron", "David", "Leader", "Conservative]]"], "ner_tags": ["O", "I-PER", "B-PER", "O", "O"]}
+{"tokens": ["Sgt", "where", ",", "Arizona", ",", "Flagstaff", "in", "place", "takes", "story", "the", "of", "Much", "."], "ner_tags": ["O", "O", "O", "I-LOC", "I-LOC", "B-LOC", "O", "O", "O", "O", "O", "O", "O", "O"]}

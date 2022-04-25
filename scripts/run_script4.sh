@@ -1,7 +1,8 @@
 inputs=("../../bucket/supervised_data/xnli/en/train_en.json" "../../bucket/supervised_data/xnli/en/dev_en.json" "../../bucket/supervised_data/ner/en/train.json" "../../bucket/supervised_data/ner/en/dev.json" "../../bucket/supervised_data/pos/en/train-en.json" "../../bucket/supervised_data/pos/en/dev-en.json")
 
-base_dir="transl_en_500K"
-suffix="tlm_100_gen_0_overl"
+tlm_generation_rate="--tlm_generation_rate 0.25"
+suffix="tlm_25_gen_0_overl"
+base_dir="transl_en_500K_$suffix"
 
 pretrain_model="../../bucket/henry_model_outputs/en/$base_dir/tlm"
 
@@ -12,8 +13,11 @@ synthetic_info=("" "--one_to_one_mapping --word_modification replace --is_synthe
 
 task=("xnli" "ner" "pos")
 
-run_name="${base_dir}_$suffix"
+run_name="${base_dir}"
 state=("_orig" "_deriv")
+
+#################################################### Pretraining ####################################################
+python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_tlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_tlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/pretrain_data/en/train.txt --train_synthetic_file ../../bucket/pretrain_data/en/train.txt --validation_file ../../bucket/pretrain_data/en/valid.txt --validation_synthetic_file ../../bucket/pretrain_data/en/valid.txt --output_dir ${pretrain_model} --run_name $run_name --one_to_one_mapping --word_modification replace $tlm_generation_rate
 
 #################################################### Finetuning ####################################################
 for i in {0..5}

@@ -227,7 +227,14 @@ class DataTrainingArguments:
         metadata={
             "help": "When less than one, use target_dataset_ratio * original dataset size."
         },
-    )    
+    )   
+    # Ratio of TLM data generated during data generation
+    tlm_generation_rate: float = field(
+        default=1,
+        metadata={
+            "help": "Percentage of original sentences we use/sample to generate TLM data instances"
+        }
+    ) 
 
     def __post_init__(self):
         if self.dataset_name is None and self.train_file is None and self.validation_file is None:
@@ -497,8 +504,22 @@ def main():
             return result
 
         def make_tlm(examples):
-            # pdb.set_trace()
             ### IMPORTANT PARAMETER ###
+            selected_indices = np.random.choice(len(examples['input_ids']), int(data_args.tlm_generation_rate*len(examples['input_ids'])), replace=False)
+            selected_indices = selected_indices.tolist()
+            selected_indices.sort()
+
+            # print("STOP!")
+            # pdb.set_trace()
+
+            tmp_examples = {
+                k: [] for k in examples.keys()
+            }
+            for k in examples.keys():
+                tmp_examples[k] = [examples[k][index] for index in selected_indices]
+            
+            examples = deepcopy(tmp_examples)
+
             tokens_per_batch = data_args.max_seq_length
             pad_index = tokenizer.pad_token_id
 
@@ -534,6 +555,7 @@ def main():
             result['position_ids'] = []
 
             if np.shape(lengths1)[0] == 0 or np.shape(lengths2)[0] == 0:
+                # pdb.set_trace()
                 return result
 
             # pdb.set_trace()
@@ -648,6 +670,8 @@ def main():
                 num_proc=data_args.preprocessing_num_workers,
                 load_from_cache_file=not data_args.overwrite_cache,
             )
+        
+        # pdb.set_trace()
 
     # Make synthetic language modifications if necessary
     # tokenized_datasets = modify_inputs_synthetic(data_args, training_args, tokenized_datasets, tokenizer=tokenizer)
