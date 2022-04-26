@@ -6,7 +6,7 @@ inputs=("../../bucket/supervised_data/xnli/en/train_en.json" "../../bucket/super
 "../../bucket/supervised_data/pos/en/dep/synthetic_dep_flattened_train-en-en~fr@N~fr@V.json" "../../bucket/supervised_data/pos/en/dep/synthetic_dep_flattened_dev-en-en~fr@N~fr@V.json")
 
 tlm_generation_rate="--tlm_generation_rate 0.25"
-overlap_rate="--one_to_one_file synthetic_language_files/word_based/configuration_files/one_to_one_mapping_random_40000_fraction_25.npy"
+overlap_rate="--one_to_one_file synthetic_language_files/word_based/configuration_files/one_to_one_mapping_random_40000_fraction_75.npy"
 suffix="tlm_25_gen_25_overl"
 base_dir="transl_synt_en_fr_500K_$suffix"
 

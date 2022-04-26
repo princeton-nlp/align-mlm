@@ -6,7 +6,7 @@ inputs=("../../bucket/supervised_data/xnli/en/train_en.json" "../../bucket/super
 "../../bucket/henry_invert_data/pos/en/train_en_inv.json" "../../bucket/henry_invert_data/pos/en/dev_en_inv.json")
 
 tlm_generation_rate="--tlm_generation_rate 0.25"
-overlap_rate="--one_to_one_file synthetic_language_files/word_based/configuration_files/one_to_one_mapping_random_40000_fraction_25.npy"
+overlap_rate="--one_to_one_file synthetic_language_files/word_based/configuration_files/one_to_one_mapping_random_40000_fraction_75.npy"
 suffix="tlm_25_gen_25_overl"
 base_dir="transl_inv_en_500K_$suffix"
 
