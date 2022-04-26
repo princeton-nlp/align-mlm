@@ -445,7 +445,7 @@ def main():
                     prev_suffix = inv_label_to_id[examples['labels'][i][j]].split('-')[-1]
                 elif flag and examples['labels'][i][j] in I_labels and prev_suffix != inv_label_to_id[examples['labels'][i][j]].split('-')[-1]:
                     examples['labels'][i][j] = I_to_B[examples['labels'][i][j]]
-                    prev_suffix = inv_label_to_id[examples['labels'][i][j]].split('-')[-1]                    
+                    prev_suffix = inv_label_to_id[examples['labels'][i][j]].split('-')[-1]
         return examples
 
     # pdb.set_trace()

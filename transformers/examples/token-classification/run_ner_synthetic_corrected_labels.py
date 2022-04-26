@@ -421,7 +421,7 @@ def main():
                     prev_suffix = inv_label_to_id[examples['labels'][i][j]].split('-')[-1]                    
         return examples
 
-    pdb.set_trace()
+    # pdb.set_trace()
     # Make sure the NER labels are consistent
     for key in tokenized_datasets.keys():
         tokenized_datasets[key] = tokenized_datasets[key].map(

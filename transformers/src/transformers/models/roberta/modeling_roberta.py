@@ -679,7 +679,7 @@ class RobertaModel(RobertaPreTrainedModel):
             the cross-attention if the model is configured as a decoder. Mask values selected in ``[0, 1]``: ``1`` for
             tokens that are NOT MASKED, ``0`` for MASKED tokens.
         """
-        pdb.set_trace()
+        # pdb.set_trace()
 
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
@@ -889,7 +889,7 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
 
-        pdb.set_trace()
+        # pdb.set_trace()
 
         if config.is_decoder:
             logger.warning(
@@ -959,7 +959,7 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
         sequence_output = outputs[0]
         prediction_scores = self.lm_head(sequence_output)
 
-        pdb.set_trace()
+        # pdb.set_trace()
         masked_lm_loss = None
         if labels is not None:
             loss_fct = CrossEntropyLoss()

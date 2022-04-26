@@ -1,7 +1,7 @@
 inputs=("../../bucket/supervised_data/xnli/en/train_en.json" "../../bucket/supervised_data/xnli/en/dev_en.json"
 "../../bucket/supervised_data/xnli/en/dep/synthetic_dep_flattened_train_en-en~fr@N~fr@V.json" "../../bucket/supervised_data/xnli/en/dep/synthetic_dep_flattened_dev_en-en~fr@N~fr@V.json"
 "../../bucket/supervised_data/ner/en/train.json" "../../bucket/supervised_data/ner/en/dev.json"
-"../../bucket/supervised_data/ner/en/dep/synthetic_dep_flattened_train-en~fr@N~fr@V.json" "../../bucket/supervised_data/ner/en/dep/synthetic_dep_flattened_dev-en~fr@N~fr@V.json"
+"../../bucket/henry_syntax_data/ner/en/train_en_fr_synt.json" "../../bucket/henry_syntax_data/ner/en/dev_en_fr_synt.json"
 "../../bucket/supervised_data/pos/en/train-en.json" "../../bucket/supervised_data/pos/en/dev-en.json"
 "../../bucket/supervised_data/pos/en/dep/synthetic_dep_flattened_train-en-en~fr@N~fr@V.json" "../../bucket/supervised_data/pos/en/dep/synthetic_dep_flattened_dev-en-en~fr@N~fr@V.json")
 

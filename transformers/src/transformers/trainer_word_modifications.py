@@ -251,7 +251,7 @@ class TrainerWordModifications:
         self.model = model
         default_collator = default_data_collator if tokenizer is None else DataCollatorWithPadding(tokenizer)
 
-        pdb.set_trace()
+        # pdb.set_trace()
         self.data_collator = data_collator if data_collator is not None else default_collator
         
         # Initialize the dataset
@@ -647,10 +647,6 @@ class TrainerWordModifications:
         # Data loader and number of training steps
         train_dataloader = self.get_train_dataloader()
 
-        for step, inputs in enumerate(train_dataloader):
-            pdb.set_trace()
-
-
         # Setting up training control variables:
         # number of training epochs: num_train_epochs
         # number of training steps per epoch: num_update_steps_per_epoch
@@ -791,7 +787,7 @@ class TrainerWordModifications:
             if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
                 train_dataloader.sampler.set_epoch(epoch)
 
-            pdb.set_trace()
+            # pdb.set_trace()
             if is_torch_tpu_available():
                 parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(
                     self.args.device
@@ -808,7 +804,7 @@ class TrainerWordModifications:
             self.control = self.callback_handler.on_epoch_begin(self.args, self.state, self.control)
 
             for step, inputs in enumerate(epoch_iterator):
-                pdb.set_trace()
+                # pdb.set_trace()
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
@@ -1164,7 +1160,7 @@ class TrainerWordModifications:
         # if self.data_args.permute_vocabulary:
         #     inputs = self.word_based_modifications.modify_inputs_permute(inputs)
 
-        pdb.set_trace()
+        # pdb.set_trace()
         inputs = self._prepare_inputs(inputs)
 
         if self.use_amp:
