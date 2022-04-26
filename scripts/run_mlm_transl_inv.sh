@@ -20,6 +20,9 @@ task=("xnli" "ner" "pos")
 run_name="${base_dir}"
 state=("_orig" "_deriv")
 
+export WANDB_PROJECT=$run_name
+echo $WANDB_PROJECT
+
 #################################################### Pretraining ####################################################
 python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_mlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 50 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/pretrain_data/en/train.txt --transitive_file ../../bucket/henry_invert_data/pretrain/en/train_inv.txt --validation_file ../../bucket/pretrain_data/en/valid.txt --output_dir ${pretrain_model} --run_name inverted_en_500K_mlm --one_to_one_mapping --word_modification replace
 

@@ -311,6 +311,7 @@ if is_torch_available():
         DataCollatorWithPadding,
         default_data_collator,
     )
+    from .data.data_collator_dict_mlm import DataCollatorForLanguageModelingDictMLM
     from .data.datasets import (
         GlueDataset,
         GlueDataTrainingArguments,

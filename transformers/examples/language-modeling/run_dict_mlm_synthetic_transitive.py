@@ -40,6 +40,7 @@ from transformers import (
     AutoModelForMaskedLM,
     AutoTokenizer,
     DataCollatorForLanguageModeling,
+    DataCollatorForLanguageModelingDictMLM,
     HfArgumentParser,
     Trainer,
     TrainerWordModifications,
@@ -403,7 +404,7 @@ def main():
                 padding=padding,
                 truncation=True,
                 max_length=data_args.max_seq_length,
-                # We use this option because DataCollatorForLanguageModeling (see below) is more efficient when it
+                # We use this option because DataCollatorForLanguageModelingDictMLM (see below) is more efficient when it
                 # receives the `special_tokens_mask`.
                 return_special_tokens_mask=True,
             )
@@ -417,7 +418,7 @@ def main():
         )
     else:
         # Otherwise, we tokenize every text, then concatenate them together before splitting them in smaller parts.
-        # We use `return_special_tokens_mask=True` because DataCollatorForLanguageModeling (see below) is more
+        # We use `return_special_tokens_mask=True` because DataCollatorForLanguageModelingDictMLM (see below) is more
         # efficient when it receives the `special_tokens_mask`.
         def tokenize_function(examples):
             return tokenizer(examples[text_column_name], return_special_tokens_mask=True)
@@ -694,7 +695,7 @@ def main():
     # pdb.set_trace()
     # Data collator
     # This one will take care of randomly masking the tokens.
-    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm_probability=data_args.mlm_probability)
+    data_collator = DataCollatorForLanguageModelingDictMLM(tokenizer=tokenizer, mlm_probability=data_args.mlm_probability)
 
     # Initialize our Trainer
     trainer = TrainerWordModifications(

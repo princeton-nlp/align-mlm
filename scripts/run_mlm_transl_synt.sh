@@ -21,7 +21,7 @@ task=("xnli" "ner" "pos")
 run_name="${base_dir}"
 state=("_orig" "_deriv")
 
-export WANDB_PROJECT="transl_synt_en_500K_mlm_0_overl"
+export WANDB_PROJECT=$run_name
 echo $WANDB_PROJECT
 
 #################################################### Finetuning ####################################################

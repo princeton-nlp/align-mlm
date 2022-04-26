@@ -20,6 +20,9 @@ task=("xnli" "ner" "pos")
 run_name="${base_dir}"
 state=("_orig" "_deriv")
 
+export WANDB_PROJECT=$run_name
+echo $WANDB_PROJECT
+
 #################################################### Finetuning ####################################################
 for i in {0..5}
 do
