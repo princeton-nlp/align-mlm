@@ -19,6 +19,7 @@ from typing import Any, Callable, Dict, List, NewType, Optional, Tuple, Union
 
 import torch
 from torch.nn.utils.rnn import pad_sequence
+import numpy as np
 import pdb
 
 from ..tokenization_utils_base import BatchEncoding, PaddingStrategy, PreTrainedTokenizerBase
@@ -247,24 +248,53 @@ class DataCollatorForLanguageModelingDictMLM:
         :class:`~transformers.PreTrainedTokenizer` or a :class:`~transformers.PreTrainedTokenizerFast` with the
         argument :obj:`return_special_tokens_mask=True`.
     """
+    
+    # tokenizer: PreTrainedTokenizerBase
+    # mlm: bool = True
+    # mlm_probability: float = 0.15
 
-    tokenizer: PreTrainedTokenizerBase
-    mlm: bool = True
-    mlm_probability: float = 0.15
+    def __init__(self, data_args, tokenizer: PreTrainedTokenizerBase, mlm: bool = True, mlm_probability: float = 0.15):
+        self.data_args = data_args
+        self.tokenizer: PreTrainedTokenizerBase = tokenizer
+        self.mlm: bool = mlm
+        self.mlm_probability: float = mlm_probability
 
-    def __post_init__(self):
-        # pdb.set_trace()
+        # Should we modify special tokens? That is contained in boolean data_args.shift_special
+        if data_args.shift_special:
+            self.special_tokens = [tokenizer.pad_token_id]
+        else:
+            self.special_tokens = [tokenizer.cls_token_id, tokenizer.sep_token_id, tokenizer.pad_token_id]
+
+        # self.special_tokens = torch.tensor(self.special_tokens, dtype=torch.int)
+        self.special_tokens = np.array(self.special_tokens)
+
+        # Vocabulary size
+        self.single_lang_vocab_size = tokenizer.vocab_size
+
+        self.lang1_id = tokenizer.pad_token_id+1
+        self.lang2_id = tokenizer.pad_token_id+2
+
         if self.mlm and self.tokenizer.mask_token is None:
             raise ValueError(
                 "This tokenizer does not have a mask token which is necessary for masked language modeling. "
                 "You should pass `mlm=False` to train on causal language modeling instead."
             )
 
+        # pdb.set_trace()
+
+    # def __post_init__(self):
+    #     pdb.set_trace()
+    #     if self.mlm and self.tokenizer.mask_token is None:
+    #         raise ValueError(
+    #             "This tokenizer does not have a mask token which is necessary for masked language modeling. "
+    #             "You should pass `mlm=False` to train on causal language modeling instead."
+    #         )
+
     def __call__(
         self, examples: List[Union[List[int], torch.Tensor, Dict[str, torch.Tensor]]]
     ) -> Dict[str, torch.Tensor]:
 
-        pdb.set_trace()
+        # pdb.set_trace()
 
         # Handle dict or lists with proper padding and conversion to tensor.
         if isinstance(examples[0], (dict, BatchEncoding)):
@@ -288,8 +318,8 @@ class DataCollatorForLanguageModelingDictMLM:
         # If special token mask has been preprocessed, pop it from the dict.
         special_tokens_mask = batch.pop("special_tokens_mask", None)
         if self.mlm:
-            batch["input_ids"], batch["labels"] = self.mask_tokens(
-                batch["input_ids"], special_tokens_mask=special_tokens_mask
+            batch["input_ids"], batch["labels"], batch["lang_type_ids"] = self.mask_tokens(
+                batch["input_ids"], batch["lang_type_ids"], special_tokens_mask=special_tokens_mask
             )
         else:
             labels = batch["input_ids"].clone()
@@ -297,29 +327,69 @@ class DataCollatorForLanguageModelingDictMLM:
                 labels[labels == self.tokenizer.pad_token_id] = -100
             batch["labels"] = labels
         
-        pdb.set_trace()
+        # pdb.set_trace()
         return batch
 
+    def make_synthetic(self, token):
+        if token in self.special_tokens:
+            return token
+        elif token >= self.single_lang_vocab_size:
+            return token
+        else:
+            return token + self.single_lang_vocab_size
+
+    def make_original(self, token):
+        if token in self.special_tokens:
+            return token
+        elif token >= self.single_lang_vocab_size:
+            return token - self.single_lang_vocab_size
+        else:
+            return token
+
     def mask_tokens(
-        self, inputs: torch.Tensor, special_tokens_mask: Optional[torch.Tensor] = None
+        self, inputs: torch.Tensor, lang_inputs: torch.Tensor, special_tokens_mask: Optional[torch.Tensor] = None
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random, 10% original.
         """
-        labels = inputs.clone()
+        # labels = inputs.clone()
+        dim = inputs.shape
         # We sample a few tokens in each sequence for MLM training (with probability `self.mlm_probability`)
-        probability_matrix = torch.full(labels.shape, self.mlm_probability)
+        probability_matrix = torch.full(dim, self.mlm_probability)
         if special_tokens_mask is None:
             special_tokens_mask = [
-                self.tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in labels.tolist()
+                self.tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in inputs.tolist()
             ]
             special_tokens_mask = torch.tensor(special_tokens_mask, dtype=torch.bool)
         else:
             special_tokens_mask = special_tokens_mask.bool()
-
+        
         probability_matrix.masked_fill_(special_tokens_mask, value=0.0)
         masked_indices = torch.bernoulli(probability_matrix).bool()
+        # labels[~masked_indices] = -100  # We only compute loss on masked tokens
+
+        crosslingual_rate = 0.5
+
+        np_inputs = inputs.numpy()
+        temp_mask = np.isin(np_inputs, self.special_tokens)
+        special_inputs = torch.from_numpy(temp_mask).to(torch.bool)
+
+        # special_inputs = torch.isin(inputs, self.special_tokens) # true for special tokens
+        original = (lang_inputs == self.lang1_id)
+        synthetic = (lang_inputs == self.lang2_id)
+
+        # crosslingual_rate, we change a masked token to its synonym
+        # dict_mlm_indices = torch.bernoulli(torch.full(labels.shape, crosslingual_rate)).bool() & masked_indices
+        turn_synthetic = torch.bernoulli(torch.full(dim, crosslingual_rate)).bool()
+        
+        inputs[masked_indices & original & ~special_inputs & turn_synthetic] += self.single_lang_vocab_size
+        lang_inputs[masked_indices & original & ~special_inputs & turn_synthetic] = self.lang2_id
+        inputs[masked_indices & synthetic & ~special_inputs & ~turn_synthetic] -= self.single_lang_vocab_size
+        lang_inputs[masked_indices & synthetic & ~special_inputs & ~turn_synthetic] = self.lang1_id
+
+        labels = inputs.clone()
         labels[~masked_indices] = -100  # We only compute loss on masked tokens
+        # pdb.set_trace()
 
         # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
         indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8)).bool() & masked_indices
@@ -330,8 +400,10 @@ class DataCollatorForLanguageModelingDictMLM:
         random_words = torch.randint(len(self.tokenizer), labels.shape, dtype=torch.long)
         inputs[indices_random] = random_words[indices_random]
 
+        # pdb.set_trace()
+
         # The rest of the time (10% of the time) we keep the masked input tokens unchanged
-        return inputs, labels
+        return inputs, labels, lang_inputs
 
 
 @dataclass

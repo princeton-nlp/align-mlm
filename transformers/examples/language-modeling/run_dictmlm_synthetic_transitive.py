@@ -228,14 +228,7 @@ class DataTrainingArguments:
         metadata={
             "help": "When less than one, use target_dataset_ratio * original dataset size."
         },
-    )   
-    # Ratio of TLM data generated during data generation
-    tlm_generation_rate: float = field(
-        default=1,
-        metadata={
-            "help": "Percentage of original sentences we use/sample to generate TLM data instances"
-        }
-    ) 
+    )
 
     def __post_init__(self):
         if self.dataset_name is None and self.train_file is None and self.validation_file is None:
@@ -640,36 +633,36 @@ def main():
                 )
         
 
-        assert len(tokenized_datasets['train']['input_ids']) == len(tokenized_datasets['train_synthetic']['input_ids'])
-        assert len(tokenized_datasets['validation']['input_ids']) == len(tokenized_datasets['validation_synthetic']['input_ids'])
+        # assert len(tokenized_datasets['train']['input_ids']) == len(tokenized_datasets['train_synthetic']['input_ids'])
+        # assert len(tokenized_datasets['validation']['input_ids']) == len(tokenized_datasets['validation_synthetic']['input_ids'])
         # pdb.set_trace()
 
         col_names = tokenized_datasets['train'].column_names
         col_names_syn = [f"{c}_syn" for c in col_names]
         # pdb.set_trace()
-        tlm_datasets = {'train': deepcopy(tokenized_datasets['train']), 'validation': deepcopy(tokenized_datasets['validation'])}
+        # tlm_datasets = {'train': deepcopy(tokenized_datasets['train']), 'validation': deepcopy(tokenized_datasets['validation'])}
 
-        # pdb.set_trace()
-        for key in tlm_datasets.keys():
-            # key = 'train' or 'validation'
-            for col in col_names:
-                tlm_datasets[key] = tlm_datasets[key].add_column(
-                    f"{col}_syn",
-                    deepcopy(tokenized_datasets[f"{key}_synthetic"][col])
-                )
+        # # pdb.set_trace()
+        # for key in tlm_datasets.keys():
+        #     # key = 'train' or 'validation'
+        #     for col in col_names:
+        #         tlm_datasets[key] = tlm_datasets[key].add_column(
+        #             f"{col}_syn",
+        #             deepcopy(tokenized_datasets[f"{key}_synthetic"][col])
+        #         )
 
-        # pdb.set_trace()
+        # # pdb.set_trace()
 
-        for k in tlm_datasets:
-            # pdb.set_trace()
-            tlm_datasets[k] = tlm_datasets[k].map(
-                make_tlm,
-                batched=True,
-                remove_columns=col_names_syn,
-                # batch_size=None,
-                num_proc=data_args.preprocessing_num_workers,
-                load_from_cache_file=not data_args.overwrite_cache,
-            )
+        # for k in tlm_datasets:
+        #     # pdb.set_trace()
+        #     tlm_datasets[k] = tlm_datasets[k].map(
+        #         make_tlm,
+        #         batched=True,
+        #         remove_columns=col_names_syn,
+        #         # batch_size=None,
+        #         num_proc=data_args.preprocessing_num_workers,
+        #         load_from_cache_file=not data_args.overwrite_cache,
+        #     )
         
         # pdb.set_trace()
 
@@ -689,13 +682,13 @@ def main():
     # pdb.set_trace()
 
     # Combine the two datasets
-    tokenized_datasets = {'train': concatenate_datasets([tokenized_datasets['train'], tokenized_datasets['train_synthetic'], tlm_datasets['train']]), 
-    'validation': concatenate_datasets([tokenized_datasets['validation'], tokenized_datasets['validation_synthetic'], tlm_datasets['validation']])}
+    tokenized_datasets = {'train': concatenate_datasets([tokenized_datasets['train'], tokenized_datasets['train_synthetic']]), 
+    'validation': concatenate_datasets([tokenized_datasets['validation'], tokenized_datasets['validation_synthetic']])}
 
     # pdb.set_trace()
     # Data collator
     # This one will take care of randomly masking the tokens.
-    data_collator = DataCollatorForLanguageModelingDictMLM(tokenizer=tokenizer, mlm_probability=data_args.mlm_probability)
+    data_collator = DataCollatorForLanguageModelingDictMLM(data_args=data_args, tokenizer=tokenizer, mlm_probability=data_args.mlm_probability)
 
     # Initialize our Trainer
     trainer = TrainerWordModifications(
