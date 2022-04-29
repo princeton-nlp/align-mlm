@@ -1,6 +1,6 @@
 inputs=("../../bucket/supervised_data/xnli/en/train_en.json" "../../bucket/supervised_data/xnli/en/dev_en.json" "../../bucket/supervised_data/ner/en/train.json" "../../bucket/supervised_data/ner/en/dev.json" "../../bucket/supervised_data/pos/en/train-en.json" "../../bucket/supervised_data/pos/en/dev-en.json")
 
-suffix="dictmlm_0_gen_0_overl"
+suffix="dictmlm_100_gen_0_overl"
 base_dir="transl_en_500K_$suffix"
 
 pretrain_model="../../bucket/henry_model_outputs/en/$base_dir/dictmlm"

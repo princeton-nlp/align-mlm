@@ -5,7 +5,7 @@ inputs=("../../bucket/supervised_data/xnli/en/train_en.json" "../../bucket/super
 "../../bucket/supervised_data/pos/en/train-en.json" "../../bucket/supervised_data/pos/en/dev-en.json"
 "../../bucket/supervised_data/pos/en/dep/synthetic_dep_flattened_train-en-en~fr@N~fr@V.json" "../../bucket/supervised_data/pos/en/dep/synthetic_dep_flattened_dev-en-en~fr@N~fr@V.json")
 
-suffix="dictmlm_0_gen_0_overl"
+suffix="dictmlm_100_gen_0_overl"
 base_dir="transl_synt_en_fr_500K_$suffix"
 
 pretrain_model="../../bucket/henry_model_outputs/en/$base_dir/dictmlm"
