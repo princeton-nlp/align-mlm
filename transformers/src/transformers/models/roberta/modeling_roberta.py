@@ -24,7 +24,7 @@ import pdb
 import numpy as np
 
 # Uncomment if not on TPU
-import torch_xla.core.xla_model as xm
+# import torch_xla.core.xla_model as xm
 
 from ...activations import ACT2FN, gelu
 from ...file_utils import (
@@ -925,10 +925,10 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
             mask = sum(alignment_indices_orig==i for i in config.special_tokens).bool()
 
             # if CPU of GPU
-            # device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+            device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
             # if TPU
-            device=xm.xla_device()
+            # device=xm.xla_device()
             self.alignment_indices_orig = torch.masked_select(alignment_indices_orig, ~mask)
 
             # pdb.set_trace()
@@ -1012,7 +1012,9 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
         if self.alignment_percent != 0:
             orig_align = self.roberta.embeddings.word_embeddings(self.alignment_indices_orig)
             syn_align = self.roberta.embeddings.word_embeddings(self.alignment_indices_orig + self.vocab_size // 2)
-            alignment_loss = self.alignment_loss_weight * torch.norm(orig_align - syn_align, 2) / self.alignment_indices_orig.shape[0]
+
+            # pdb.set_trace()
+            alignment_loss = self.alignment_loss_weight * torch.sum(torch.norm(orig_align - syn_align, p=2, dim=1)) / self.alignment_indices_orig.shape[0]
 
         # test2 = torch.from_numpy(self.test1)
         # print(torch.equal(test2, orig_align))
