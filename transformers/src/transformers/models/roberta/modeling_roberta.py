@@ -23,6 +23,9 @@ from torch.nn import CrossEntropyLoss, MSELoss
 import pdb
 import numpy as np
 
+# Uncomment if not on TPU
+import torch_xla.core.xla_model as xm
+
 from ...activations import ACT2FN, gelu
 from ...file_utils import (
     add_code_sample_docstrings,
@@ -908,8 +911,11 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
         self.roberta = RobertaModel(config, add_pooling_layer=False)
         self.lm_head = RobertaLMHead(config)
 
+        self.alignment_percent = None
         self.alignment_percent = config.alignment_percent
-        if self.alignment_percent is not None:
+
+        # pdb.set_trace()
+        if self.alignment_percent != 0:
             self.vocab_size = config.vocab_size
             self.alignment_loss_weight = config.alignment_loss_weight
             perm = torch.randperm(config.vocab_size // 2)
@@ -917,8 +923,12 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
 
             # remove special tokens from being aligned
             mask = sum(alignment_indices_orig==i for i in config.special_tokens).bool()
-            # print(self.roberta.device)
-            device = "cuda:0"
+
+            # if CPU of GPU
+            # device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+
+            # if TPU
+            device=xm.xla_device()
             self.alignment_indices_orig = torch.masked_select(alignment_indices_orig, ~mask)
 
             # pdb.set_trace()
@@ -926,7 +936,8 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
             # lang_embeddings = self.roberta.embeddings.lang_type_embeddings
 
             # orig_align = self.roberta.embeddings.word_embeddings(self.alignment_indices_orig)
-            self.alignment_indices_orig = self.alignment_indices_orig.to(device)
+            self.alignment_indices_orig = self.alignment_indices_orig.to(device=device)
+            # pdb.set_trace()
             # self.syn_align = word_embeddings(self.alignment_indices_orig + config.vocab_size // 2)
         
         # assert(torch.equal(self.orig_align, self.roberta.embeddings.word_embeddings(self.alignment_indices_orig)))
@@ -995,13 +1006,12 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
             loss_fct = CrossEntropyLoss()
             masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
 
-        orig_align = self.roberta.embeddings.word_embeddings(self.alignment_indices_orig)
-        syn_align = self.roberta.embeddings.word_embeddings(self.alignment_indices_orig + self.vocab_size // 2)
-
         # pdb.set_trace()
 
         alignment_loss = None
-        if self.alignment_percent is not None:
+        if self.alignment_percent != 0:
+            orig_align = self.roberta.embeddings.word_embeddings(self.alignment_indices_orig)
+            syn_align = self.roberta.embeddings.word_embeddings(self.alignment_indices_orig + self.vocab_size // 2)
             alignment_loss = self.alignment_loss_weight * torch.norm(orig_align - syn_align, 2) / self.alignment_indices_orig.shape[0]
 
         # test2 = torch.from_numpy(self.test1)
@@ -1010,13 +1020,14 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
         # pdb.set_trace()
 
         if not return_dict:
+            # pdb.set_trace()
             output = (prediction_scores,) + outputs[2:]
             output = ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
             output = ((alignment_loss,) + output) if self.alignment_percent is not None else output
             return output
 
         return MaskedLMOutput(
-            loss=masked_lm_loss,
+            loss=masked_lm_loss + alignment_loss,
             logits=prediction_scores,
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
