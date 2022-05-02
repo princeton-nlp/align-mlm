@@ -24,7 +24,7 @@ import pdb
 import numpy as np
 
 # Uncomment if not on TPU
-# import torch_xla.core.xla_model as xm
+import torch_xla.core.xla_model as xm
 
 from ...activations import ACT2FN, gelu
 from ...file_utils import (
@@ -925,10 +925,10 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
             mask = sum(alignment_indices_orig==i for i in config.special_tokens).bool()
 
             # if CPU of GPU
-            device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+            # device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
             # if TPU
-            # device=xm.xla_device()
+            device=xm.xla_device()
             self.alignment_indices_orig = torch.masked_select(alignment_indices_orig, ~mask)
 
             # pdb.set_trace()

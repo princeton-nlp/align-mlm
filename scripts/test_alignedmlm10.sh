@@ -29,7 +29,7 @@ python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/la
 
 
 #################################################### Finetuning ####################################################
-for i in {0..1}
+for i in {0..0}
 do
     if ((i < 2));
     then
@@ -40,7 +40,7 @@ do
 done
 
 #################################################### Zero-shot ####################################################
-for i in {0..1}
+for i in {0..0}
 do
     if ((i < 2));
     then
