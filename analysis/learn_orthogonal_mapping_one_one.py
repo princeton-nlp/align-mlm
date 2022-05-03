@@ -7,6 +7,7 @@ Example command: python learn_orthogonal_mapping_one_one.py --model1 ~/bucket/mo
 import argparse
 import numpy as np
 from transformers import AutoModelForMaskedLM, AutoConfig
+import torch
 
 def get_embeddings(args):
     # Instantiate the two models
@@ -119,6 +120,9 @@ def main():
 
     args = parser.parse_args()
     args.model2 = args.model1
+
+    torch.manual_seed(args.random_seed)
+    np.random.seed(args.random_seed)
 
     embeddings = get_embeddings(args)
 
