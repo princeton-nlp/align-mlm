@@ -18,7 +18,5 @@
   "pad_token_id": 1,
   "type_vocab_size": 2,
   "num_langs": 4,
-  "vocab_size": 40000,
-  "use_lang_ids": true,
-  "alignment_percent": 0
+  "vocab_size": 40000
 }

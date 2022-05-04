@@ -24,7 +24,7 @@ import pdb
 import numpy as np
 
 # Uncomment if not on TPU
-import torch_xla.core.xla_model as xm
+# import torch_xla.core.xla_model as xm
 
 from ...activations import ACT2FN, gelu
 from ...file_utils import (
@@ -82,10 +82,16 @@ class RobertaEmbeddings(nn.Module):
         self.position_embeddings = nn.Embedding(config.max_position_embeddings, config.hidden_size)
         self.token_type_embeddings = nn.Embedding(config.type_vocab_size, config.hidden_size)
 
-        if config.use_lang_ids:
+        # pdb.set_trace()
+
+        try:
+            self.use_lang_ids = config.use_lang_ids
+        except AttributeError:
+            self.use_lang_ids = True
+
+        if self.use_lang_ids:
             self.lang_type_embeddings = nn.Embedding(config.num_langs, config.hidden_size)
         # self.lang_type_embeddings = nn.Embedding(2, config.hidden_size)
-        # pdb.set_trace()
 
         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be able to load
         # any TensorFlow checkpoint file
@@ -101,10 +107,8 @@ class RobertaEmbeddings(nn.Module):
         self.position_embeddings = nn.Embedding(
             config.max_position_embeddings, config.hidden_size, padding_idx=self.padding_idx
         )
-        if config.use_lang_ids:
+        if self.use_lang_ids:
             self.lang_type_embeddings = nn.Embedding(config.num_langs, config.hidden_size, padding_idx=self.padding_idx)
-
-        self.use_lang_ids = config.use_lang_ids
 
 
     def forward(self, input_ids=None, token_type_ids=None, lang_type_ids=None, position_ids=None, inputs_embeds=None):
@@ -911,11 +915,13 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
         self.roberta = RobertaModel(config, add_pooling_layer=False)
         self.lm_head = RobertaLMHead(config)
 
-        self.alignment_percent = None
-        self.alignment_percent = config.alignment_percent
+        try:
+            self.alignment_percent = config.alignment_percent
+        except AttributeError:
+            self.alignment_percent = None
 
         # pdb.set_trace()
-        if self.alignment_percent != 0:
+        if self.alignment_percent is not None:
             self.vocab_size = config.vocab_size
             self.alignment_loss_weight = config.alignment_loss_weight
             perm = torch.randperm(config.vocab_size // 2)
@@ -928,7 +934,7 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
             # device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
             # if TPU
-            device=xm.xla_device()
+            # device=xm.xla_device()
             self.alignment_indices_orig = torch.masked_select(alignment_indices_orig, ~mask)
 
             # pdb.set_trace()
@@ -1009,7 +1015,7 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
         # pdb.set_trace()
 
         alignment_loss = None
-        if self.alignment_percent != 0:
+        if self.alignment_percent is not None:
             orig_align = self.roberta.embeddings.word_embeddings(self.alignment_indices_orig)
             syn_align = self.roberta.embeddings.word_embeddings(self.alignment_indices_orig + self.vocab_size // 2)
 
@@ -1029,7 +1035,7 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
             return output
 
         return MaskedLMOutput(
-            loss=masked_lm_loss + alignment_loss,
+            loss=masked_lm_loss + (alignment_loss if (alignment_loss is not None) else 0),
             logits=prediction_scores,
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,

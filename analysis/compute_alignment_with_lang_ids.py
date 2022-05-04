@@ -89,7 +89,7 @@ def main():
 
     train, validation = get_train_validation_indices(embeddings, args)
 
-    orthogonal, embeddings = get_normalized_embeddings(embeddings, args, train)
+    embeddings = get_normalized_embeddings(embeddings, args, train)
 
     test_mapping(embeddings, args, validation, train)
 
