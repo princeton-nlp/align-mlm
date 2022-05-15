@@ -5,7 +5,7 @@ inputs=("../../bucket/supervised_data/xnli/en/train_en.json" "../../bucket/super
 "../../bucket/supervised_data/pos/en/train-en.json" "../../bucket/supervised_data/pos/en/dev-en.json"
 "../../bucket/henry_invert_data/pos/en/train_en_inv.json" "../../bucket/henry_invert_data/pos/en/dev_en_inv.json")
 
-suffix="alignedmlm_01_cost_50_alignper"
+suffix="alignedmlm_01_cost_cos_50_alignper"
 base_dir="transl_inv_en_500K_$suffix"
 config_name="config_alignedmlm-01.json"
 
@@ -25,7 +25,7 @@ export WANDB_PROJECT=$run_name
 echo $WANDB_PROJECT
 
 #################################################### Pretraining ####################################################
-python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_alignedmlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 50 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/${config_name} --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 50000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/pretrain_data/en/train.txt --transitive_file ../../bucket/henry_invert_data/pretrain/en/train_inv.txt --validation_file ../../bucket/pretrain_data/en/valid.txt --output_dir ${pretrain_model} --run_name ${base_dir} --one_to_one_mapping --word_modification replace
+python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_alignedmlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 50 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/${config_name} --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 100000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/pretrain_data/en/train.txt --transitive_file ../../bucket/henry_invert_data/pretrain/en/train_inv.txt --validation_file ../../bucket/pretrain_data/en/valid.txt --output_dir ${pretrain_model} --run_name ${base_dir} --one_to_one_mapping --word_modification replace
 
 
 #################################################### Finetuning ####################################################

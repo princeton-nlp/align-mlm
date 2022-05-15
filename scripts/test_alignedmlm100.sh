@@ -5,9 +5,9 @@ inputs=("../../bucket/supervised_data/xnli/en/train_en.json" "../../bucket/super
 "../../bucket/supervised_data/pos/en/train-en.json" "../../bucket/supervised_data/pos/en/dev-en.json"
 "../../bucket/henry_invert_data/pos/en/train_en_inv.json" "../../bucket/henry_invert_data/pos/en/dev_en_inv.json")
 
-suffix="alignedmlm_10_cost_cos_50_alignper"
+suffix="alignedmlm_100_cost_cos_50_alignper"
 base_dir="transl_inv_en_500K_$suffix"
-config_name="config_alignedmlm-10.json"
+config_name="config_alignedmlm-100.json"
 
 pretrain_model="../../bucket/henry_model_outputs/en/$base_dir/alignedmlm"
 

@@ -5,7 +5,7 @@ inputs=("../../bucket/supervised_data/xnli/en/train_en.json" "../../bucket/super
 "../../bucket/supervised_data/pos/en/train-en.json" "../../bucket/supervised_data/pos/en/dev-en.json"
 "../../bucket/supervised_data/pos/en/dep/synthetic_dep_flattened_train-en-en~fr@N~fr@V.json" "../../bucket/supervised_data/pos/en/dep/synthetic_dep_flattened_dev-en-en~fr@N~fr@V.json")
 
-suffix="dictmlm_0_overl"
+suffix="dictmlm_25_bildict_0_overl"
 base_dir="transl_synt_en_fr_500K_$suffix"
 
 pretrain_model="../../bucket/henry_model_outputs/en/$base_dir/dictmlm"
@@ -24,7 +24,7 @@ export WANDB_PROJECT=$run_name
 echo $WANDB_PROJECT
 
 #################################################### Pretraining ####################################################
-# python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_dictmlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_dictmlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt --train_synthetic_file ../../bucket/henry_syntax_data/en/synthetic_dep_train-en~fr@N~fr@V.txt --validation_file ../../bucket/henry_syntax_data/en/mono_dep_valid-en~fr@N~fr@V.txt --validation_synthetic_file ../../bucket/henry_syntax_data/en/synthetic_dep_valid-en~fr@N~fr@V.txt --output_dir ${pretrain_model} --run_name $run_name --one_to_one_mapping --word_modification replace
+python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_dictmlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_dictmlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/henry_syntax_data/en/mono_dep_train-en~fr@N~fr@V.txt --train_synthetic_file ../../bucket/henry_syntax_data/en/synthetic_dep_train-en~fr@N~fr@V.txt --validation_file ../../bucket/henry_syntax_data/en/mono_dep_valid-en~fr@N~fr@V.txt --validation_synthetic_file ../../bucket/henry_syntax_data/en/synthetic_dep_valid-en~fr@N~fr@V.txt --output_dir ${pretrain_model} --run_name $run_name --one_to_one_mapping --word_modification replace
 
 #################################################### Finetuning ####################################################
 for i in {0..5}

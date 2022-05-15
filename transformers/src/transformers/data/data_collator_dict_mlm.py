@@ -279,6 +279,11 @@ class DataCollatorForLanguageModelingDictMLM:
                 "This tokenizer does not have a mask token which is necessary for masked language modeling. "
                 "You should pass `mlm=False` to train on causal language modeling instead."
             )
+        
+        perm = torch.randperm(self.single_lang_vocab_size // 2)
+        alignment_indices_orig = perm[:int(self.single_lang_vocab_size // 2 * data_args.bilingual_rate)]
+        mask = sum(alignment_indices_orig==i for i in self.special_tokens).bool()
+        self.alignment_indices_orig = torch.masked_select(alignment_indices_orig, ~mask)
 
         # pdb.set_trace()
 
@@ -366,13 +371,18 @@ class DataCollatorForLanguageModelingDictMLM:
         
         probability_matrix.masked_fill_(special_tokens_mask, value=0.0)
         masked_indices = torch.bernoulli(probability_matrix).bool()
-        # labels[~masked_indices] = -100  # We only compute loss on masked tokens
+
+        # pdb.set_trace()
+        labels = inputs.clone()
+        labels[~masked_indices] = -100  # We only compute loss on masked tokens
 
         crosslingual_rate = 0.5
 
-        np_inputs = inputs.numpy()
-        temp_mask = np.isin(np_inputs, self.special_tokens)
-        special_inputs = torch.from_numpy(temp_mask).to(torch.bool)
+        has_synonym = torch.sum((inputs.unsqueeze(-1) == self.alignment_indices_orig), axis=-1).bool()
+
+        # np_inputs = inputs.numpy()
+        # temp_mask = np.isin(np_inputs, self.special_tokens)
+        # special_inputs = torch.from_numpy(temp_mask).to(torch.bool)
 
         # special_inputs = torch.isin(inputs, self.special_tokens) # true for special tokens
         original = (lang_inputs == self.lang1_id)
@@ -380,27 +390,21 @@ class DataCollatorForLanguageModelingDictMLM:
 
         # crosslingual_rate, we change a masked token to its synonym
         # dict_mlm_indices = torch.bernoulli(torch.full(labels.shape, crosslingual_rate)).bool() & masked_indices
-        turn_synthetic = torch.bernoulli(torch.full(dim, crosslingual_rate)).bool()
+        change_synonym = torch.bernoulli(torch.full(dim, crosslingual_rate)).bool()
         
-        inputs[masked_indices & original & ~special_inputs & turn_synthetic] += self.single_lang_vocab_size
-        lang_inputs[masked_indices & original & ~special_inputs & turn_synthetic] = self.lang2_id
-        inputs[masked_indices & synthetic & ~special_inputs & ~turn_synthetic] -= self.single_lang_vocab_size
-        lang_inputs[masked_indices & synthetic & ~special_inputs & ~turn_synthetic] = self.lang1_id
-
-        labels = inputs.clone()
-        labels[~masked_indices] = -100  # We only compute loss on masked tokens
-        # pdb.set_trace()
+        inputs[masked_indices & original & change_synonym & has_synonym] += self.single_lang_vocab_size
+        lang_inputs[masked_indices & original & change_synonym & has_synonym] = self.lang2_id
+        inputs[masked_indices & synthetic & change_synonym & has_synonym] -= self.single_lang_vocab_size
+        lang_inputs[masked_indices & synthetic & change_synonym & has_synonym] = self.lang1_id
 
         # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
-        indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8)).bool() & masked_indices
+        indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8)).bool() & masked_indices & ~change_synonym
         inputs[indices_replaced] = self.tokenizer.convert_tokens_to_ids(self.tokenizer.mask_token)
 
         # 10% of the time, we replace masked input tokens with random word
-        indices_random = torch.bernoulli(torch.full(labels.shape, 0.5)).bool() & masked_indices & ~indices_replaced
+        indices_random = torch.bernoulli(torch.full(labels.shape, 0.5)).bool() & masked_indices & ~change_synonym & ~indices_replaced
         random_words = torch.randint(len(self.tokenizer), labels.shape, dtype=torch.long)
         inputs[indices_random] = random_words[indices_random]
-
-        # pdb.set_trace()
 
         # The rest of the time (10% of the time) we keep the masked input tokens unchanged
         return inputs, labels, lang_inputs
