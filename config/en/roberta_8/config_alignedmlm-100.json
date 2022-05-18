@@ -20,6 +20,6 @@
     "use_lang_ids": false,
     "num_langs": 4,
     "vocab_size": 40000,
-    "alignment_percent": 0.5,
+    "alignment_percent": 0.25,
     "alignment_loss_weight": 100
   }
