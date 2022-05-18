@@ -1024,7 +1024,7 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
             syn_align = self.roberta.embeddings.word_embeddings(self.alignment_indices_orig + self.vocab_size // 2)
 
             # Cosine similarity loss
-            alignment_loss = -1 * self.alignment_loss_weight * torch.sum(self.cos(orig_align, syn_align))
+            alignment_loss = -1 * self.alignment_loss_weight * torch.sum(self.cos(orig_align, syn_align)) / self.alignment_indices_orig.shape[0]
 
             # L2 alignment loss
             # alignment_loss = self.alignment_loss_weight * torch.sum(torch.norm(orig_align - syn_align, p=2, dim=1)) / self.alignment_indices_orig.shape[0]
