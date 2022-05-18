@@ -36,7 +36,7 @@ function MountBucket {
 
 function MakeTPUs {
     export VERSION=1.11
-    gcloud compute tpus create h-tpu-6 --zone=us-central1-a --network=default --version=pytorch-1.11 --accelerator-type=v3-8
+    gcloud compute tpus create h-tpu-1 --zone=us-central1-a --network=default --version=pytorch-1.11 --accelerator-type=v3-8
     gcloud compute tpus list --zone=us-central1-a
     export TPU_IP_ADDRESS=10.58.244.242
     export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
@@ -44,25 +44,25 @@ function MakeTPUs {
 
 # TPU List
 ############### h-exp-1 ###############
-# export TPU_IP_ADDRESS=10.58.244.242
+# export TPU_IP_ADDRESS=10.23.248.106	
 ############### h-exp-2 ###############
-# export TPU_IP_ADDRESS=10.66.116.210
+# export TPU_IP_ADDRESS=10.56.28.98
 ############### h-exp-3 ###############
-# export TPU_IP_ADDRESS=10.119.46.154
+# export TPU_IP_ADDRESS=10.28.229.122
 ############### h-exp-4 ###############
-# export TPU_IP_ADDRESS=10.118.133.82
+# export TPU_IP_ADDRESS=10.123.235.234	
 ############### h-exp-5 ###############
-# export TPU_IP_ADDRESS=10.109.147.218 # USED FOR MLM #
+# export TPU_IP_ADDRESS=10.86.170.138 # USED FOR MLM #
 ############### h-exp-6 ###############
-# export TPU_IP_ADDRESS=10.44.224.234
+# export TPU_IP_ADDRESS=10.127.27.178
 ############### h-exp-7 ###############
-# export TPU_IP_ADDRESS=10.106.70.114
+# export TPU_IP_ADDRESS=10.8.124.90
 ############### h-exp-8 ###############
-# export TPU_IP_ADDRESS=10.69.217.98
+# export TPU_IP_ADDRESS=10.122.119.90
 ############### h-exp-9 ###############
-# export TPU_IP_ADDRESS=10.54.27.10
+# export TPU_IP_ADDRESS=10.83.156.66
 ############### h-exp-10 ###############
-# export TPU_IP_ADDRESS=10.30.82.58
+# export TPU_IP_ADDRESS=10.65.182.186
 
 function RestartVM {
     conda activate multilingual

@@ -280,10 +280,14 @@ class DataCollatorForLanguageModelingDictMLM:
                 "You should pass `mlm=False` to train on causal language modeling instead."
             )
         
-        perm = torch.randperm(self.single_lang_vocab_size // 2)
-        alignment_indices_orig = perm[:int(self.single_lang_vocab_size // 2 * data_args.bilingual_rate)]
+        perm = torch.randperm(self.single_lang_vocab_size)
+        alignment_indices_orig = perm[:int(self.single_lang_vocab_size * data_args.bilingual_rate)]
         mask = sum(alignment_indices_orig==i for i in self.special_tokens).bool()
-        self.alignment_indices_orig = torch.masked_select(alignment_indices_orig, ~mask)
+        alignment_indices_orig = torch.masked_select(alignment_indices_orig, ~mask)
+
+        alignment_indices_mask = torch.zeros((self.single_lang_vocab_size, ))
+        alignment_indices_mask[alignment_indices_orig] = True
+        self.alignment_indices_mask = alignment_indices_mask.bool().repeat(2)
 
         # pdb.set_trace()
 
@@ -376,9 +380,12 @@ class DataCollatorForLanguageModelingDictMLM:
         labels = inputs.clone()
         labels[~masked_indices] = -100  # We only compute loss on masked tokens
 
-        crosslingual_rate = 0.5
+        # We are using DICT-MLM-50
+        crosslingual_rate = 0.5 # percentage of time we choose cross-lingual objective for a masked token
 
-        has_synonym = torch.sum((inputs.unsqueeze(-1) == self.alignment_indices_orig), axis=-1).bool()
+        has_synonym = self.alignment_indices_mask[inputs]
+        # pdb.set_trace()
+        # has_synonym = torch.sum((inputs.unsqueeze(-1) == self.alignment_indices_orig), axis=-1).bool()
 
         # np_inputs = inputs.numpy()
         # temp_mask = np.isin(np_inputs, self.special_tokens)
