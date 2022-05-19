@@ -947,6 +947,10 @@ class RobertaForMaskedLM(RobertaPreTrainedModel):
 
             # orig_align = self.roberta.embeddings.word_embeddings(self.alignment_indices_orig)
             self.alignment_indices_orig = self.alignment_indices_orig.to(device=device)
+
+            # To save the information selected indices in the bilingual dictionary
+            # np.savetxt('bilingual_dictionary_1.txt', self.alignment_indices_orig.detach().cpu().numpy(), fmt='%d')
+            # np.savetxt('bilingual_dictionary_2.txt', (self.alignment_indices_orig + self.vocab_size // 2).detach().cpu().numpy(), fmt='%d')
             # pdb.set_trace()
             # self.syn_align = word_embeddings(self.alignment_indices_orig + config.vocab_size // 2)
         

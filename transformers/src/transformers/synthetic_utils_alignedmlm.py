@@ -457,6 +457,9 @@ def modify_config(data_args, training_args, tokenizer, config):
         config.special_tokens = [tokenizer.pad_token_id]
     else:
         config.special_tokens = [tokenizer.cls_token_id, tokenizer.sep_token_id, tokenizer.pad_token_id]
+    
+    config.alignment_percent = data_args.bilingual_rate
+    config.alignment_loss_weight = training_args.alignment_loss_weight
 
     if data_args.one_to_one_mapping:
         config.vocab_size = config.vocab_size * 2

@@ -220,7 +220,14 @@ class DataTrainingArguments:
         metadata={
             "help": "When less than one, use target_dataset_ratio * original dataset size."
         },
-    )    
+    )
+    # Percent of words in bilingual dictionary
+    bilingual_rate: float = field(
+        default=0.25,
+        metadata={
+            "help": "Percent of words in bilingual dictionary."
+        },
+    )
 
     def __post_init__(self):
         if self.dataset_name is None and self.train_file is None and self.validation_file is None:

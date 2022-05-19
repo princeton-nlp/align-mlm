@@ -291,6 +291,10 @@ class TrainingArguments:
     adam_epsilon: float = field(default=1e-8, metadata={"help": "Epsilon for Adam optimizer."})
     max_grad_norm: float = field(default=1.0, metadata={"help": "Max gradient norm."})
 
+
+    # Specific to alignedmlm
+    alignment_loss_weight: float = field(default=1, metadata={"help": "Coefficient for alignment loss."})
+
     num_train_epochs: float = field(default=3.0, metadata={"help": "Total number of training epochs to perform."})
     max_steps: int = field(
         default=-1,

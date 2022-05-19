@@ -413,6 +413,8 @@ class DataCollatorForLanguageModelingDictMLM:
         random_words = torch.randint(len(self.tokenizer), labels.shape, dtype=torch.long)
         inputs[indices_random] = random_words[indices_random]
 
+        # pdb.set_trace()
+
         # The rest of the time (10% of the time) we keep the masked input tokens unchanged
         return inputs, labels, lang_inputs
 

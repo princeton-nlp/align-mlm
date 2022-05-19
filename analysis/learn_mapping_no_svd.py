@@ -8,6 +8,7 @@ import argparse
 import numpy as np
 from transformers import AutoModelForMaskedLM, AutoConfig
 import torch
+import pdb
 
 def get_embeddings(args):
     # Instantiate the two models
@@ -18,7 +19,12 @@ def get_embeddings(args):
     embeddings1 = model1.roberta.embeddings.word_embeddings.weight.detach().cpu().numpy()
     embeddings2 = model2.roberta.embeddings.word_embeddings.weight.detach().cpu().numpy()
 
-    embeddings = [embeddings1, embeddings2]
+    ind1 = np.loadtxt('../bilingual_dictionary_1.txt', dtype=int)
+    ind2 = np.loadtxt('../bilingual_dictionary_2.txt', dtype=int)
+
+    ind = np.concatenate((ind1, ind2))
+
+    embeddings = [embeddings1[ind], embeddings2[ind]]
 
     # Use first half of the embeddings for the first model and second half for the second
     vocab_size = int(embeddings[0].shape[0] / 2)
