@@ -16,7 +16,7 @@ font = {'size' : font_size - 4, 'family': 'serif'}
 df = pd.read_csv('xlm.csv')
 
 xlabels = ["XNLI", "NER", "POS"]
-labels = ["MLM", "XLM", "DICT-MLM", "Align-MLM"]
+labels = ["MLM", "XLM", "DICT-MLM", "Align-MLM (Ours)"]
 # print(type(df))
 
 # df = pd.melt(df, id_vars=['Pre-training '], value_vars=['B'],
@@ -90,6 +90,7 @@ plt.savefig('Trans.pdf')
 
 plt.figure()
 matplotlib.rc('font', **font)
+labels = ["MLM", "XLM", "DICT-MLM", "Align-MLM\n(Ours)"]
 fig, ax = plt.subplots(figsize=(7, 6))
 sns.barplot(x = 'Metric',
             y = 'Trans + Inv',
@@ -119,6 +120,7 @@ plt.savefig('Trans + Inv.pdf')
 
 plt.figure()
 matplotlib.rc('font', **font)
+labels = ["MLM", "XLM", "DICT-MLM", "Align-MLM (Ours)"]
 fig, ax = plt.subplots(figsize=(7, 6))
 sns.barplot(x = 'Metric',
             y = 'Trans + Syn',
