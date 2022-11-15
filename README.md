@@ -1,6 +1,6 @@
-# When is BERT Multilingual? Isolating Crucial Ingredients for Cross-lingual Transfer
+# ALIGN-MLM: Word Embedding Alignment is Crucial for Multilingual Pre-training
 
-This repository contains code for our paper titled ["When is BERT Multilingual? Isolating Crucial Ingredients for Cross-lingual Transfer"](https://arxiv.org/pdf/2110.14782.pdf). [[arXiv]](https://arxiv.org/pdf/2110.14782.pdf) [[Blog]]()
+This repository contains code for our paper titled ["ALIGN-MLM: Word Embedding Alignment is Crucial for Multilingual Pre-training"](). [[arXiv]]()
 
 ## Table of contents
 1. [Paper in a nutshell](#nutshell)
