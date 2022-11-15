@@ -99,7 +99,7 @@ sns.barplot(x = 'Metric',
             bottom = offset).set_title('$\mathcal{T}_{trans} \circ \mathcal{T}_{inv}$', fontsize=font_size+6)
 
 handles, _ = ax.get_legend_handles_labels()
-ax.legend(handles=handles, labels=labels, fontsize=font_size-9, loc='upper left')
+ax.legend(handles=handles, labels=labels, fontsize=font_size-7, loc='upper left')
 # plt.legend([],[], frameon=False)
 
 for container in ax.containers:
