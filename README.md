@@ -1,6 +1,6 @@
 # ALIGN-MLM: Word Embedding Alignment is Crucial for Multilingual Pre-training
 
-This repository contains code for our paper titled ["ALIGN-MLM: Word Embedding Alignment is Crucial for Multilingual Pre-training"]() [[arXiv]](https://arxiv.org/pdf/2211.08547.pdf). It takes inspiration from ["When is BERT Multilingual? Isolating Crucial Ingredients for Cross-lingual Transfer"](https://arxiv.org/pdf/2110.14782.pdf), and is forked from the corresponding codebase [here](https://github.com/princeton-nlp/MultilingualAnalysis/tree/4c89a60ee7d038c4a94a470c1290e3eefa8a2b56).
+This repository contains code for our paper titled ["ALIGN-MLM: Word Embedding Alignment is Crucial for Multilingual Pre-training"]() [[arXiv]](https://arxiv.org/pdf/2211.08547.pdf). It takes inspiration from ["When is BERT Multilingual? Isolating Crucial Ingredients for Cross-lingual Transfer"](https://arxiv.org/pdf/2110.14782.pdf), and is forked from the corresponding codebase [here](https://github.com/princeton-nlp/MultilingualAnalysis).
 
 ## Table of contents
 1. [Paper in a nutshell](#nutshell)
