@@ -13,9 +13,9 @@ This repository contains code for our paper titled ["ALIGN-MLM: Word Embedding A
 ## Paper in a nutshell <a name="nutshell"></a>
 Multilingual pre-trained models exhibit zeroshot cross-lingual transfer, where a model finetuned on a source language achieves surprisingly good performance on a target language. While studies have attempted to understand
 transfer, they focus only on MLM, and the large number of differences between natural languages makes it hard to disentangle the importance of different properties.
-In this paper, we specifically highlight the importance of word embedding alignment by proposing a pretraining objective (ALIGN-MLM) whose auxiliary loss guides similar words in different languages to have similar word embeddings.
-ALIGN-MLM either outperforms or matches three widely adopted objectives (MLM, XLM, DICT-MLM) when we evaluate transfer between pairs of natural languages and their counterparts created by systematically modifying specific properties like the script.
-We also show a strong correlation between alignment and transfer for all objectives (e.g., ρs = 0.727 for XNLI), which together with ALIGN-MLM’s strong performance calls for explicitly aligning word embeddings for multilingual models.
+In this paper, we specifically highlight the importance of word embedding alignment by proposing a pretraining objective (**ALIGN-MLM**) whose auxiliary loss guides similar words in different languages to have similar word embeddings.
+ALIGN-MLM either outperforms or matches three widely adopted objectives (**MLM**, **XLM**, **DICT-MLM**) when we evaluate transfer between pairs of natural languages and their counterparts created by systematically modifying specific properties like the script.
+We also show a strong correlation between alignment and transfer for all objectives (e.g., ρs = 0.727 for _XNLI_), which together with **ALIGN-MLM**’s strong performance calls for explicitly aligning word embeddings for multilingual models.
 
 <img src="resources/Approach.png">
 
@@ -69,7 +69,7 @@ python transformers/examples/language-modeling/run_tlm_synthetic_transitive.py -
 python transformers/examples/language-modeling/run_dictmlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_dictmlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file <english_train_corpus> --train_synthetic_file <synthetic_train_corpus> --validation_file <english_validation_corpus> --validation_synthetic_file <synthetic_validation_corpus> --output_dir <dir_to_store_model> --run_name <name_of_this_run> --one_to_one_mapping --word_modification replace --bilingual_rate 0.50
 ```
 
-4. **Aligned-MLM**.
+4. **ALIGN-MLM**.
 
     Use the flag `--alignment_loss_weight` to control the strength of the alignment loss during training. Example command below.
 
@@ -78,7 +78,7 @@ python transformers/examples/language-modeling/run_alignedmlm_synthetic_transiti
 ```
 
 ### Finetuning and Zero-Shot Evaluation
-Finetuning and zero-shot evaluation are tested on three tasks: XNLI, NER, and POS. XNLI uses the  `run_glue_synthetic` scripts, while both NER and POS use `run_ner_synthetic` (but with different inputs and models to account for the different types of tags).
+Finetuning and zero-shot evaluation are tested on three tasks: _XNLI_, _NER_, and _POS_. _XNLI_ uses the  `run_glue_synthetic` scripts, while both _NER_ and _POS_ use `run_ner_synthetic` (but with different inputs and models to account for the different types of tags).
 
 ### Scripts for Data Generation, Pretraining, Finetuning, and Evaluation
 1. [This directory](preprocessing/corpus_inversion/) contains scripts used to invert pretraining and finetuning corpora.
