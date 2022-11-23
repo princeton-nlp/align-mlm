@@ -1,3 +1,0 @@
-bash scripts/run_dictmlm_transl.sh
-bash scripts/run_dictmlm_transl_inv.sh
-bash scripts/run_dictmlm_transl_synt.sh

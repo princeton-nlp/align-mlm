@@ -1,21 +1,21 @@
 # ALIGN-MLM: Word Embedding Alignment is Crucial for Multilingual Pre-training
 
-This repository contains code for our paper titled ["ALIGN-MLM: Word Embedding Alignment is Crucial for Multilingual Pre-training"](). [[arXiv]]()
+This repository contains code for our paper titled ["ALIGN-MLM: Word Embedding Alignment is Crucial for Multilingual Pre-training"]() [[arXiv]](https://arxiv.org/pdf/2211.08547.pdf). It takes inspiration from ["When is BERT Multilingual? Isolating Crucial Ingredients for Cross-lingual Transfer"](https://arxiv.org/pdf/2110.14782.pdf), and is forked from the corresponding codebase [here](https://github.com/princeton-nlp/MultilingualAnalysis/tree/4c89a60ee7d038c4a94a470c1290e3eefa8a2b56).
 
 ## Table of contents
 1. [Paper in a nutshell](#nutshell)
 1. [Installation](#installation)
-1. [Data and models](#data)
 1. [Repository usage](#usage)
+1. [Data and models](#data)
 1. [Links to experiments and results](#wb)
 1. [Citation](#citation)
 
 ## Paper in a nutshell <a name="nutshell"></a>
-While recent work on multilingual language models has demonstrated their capacity for cross-lingual zero-shot transfer on downstream tasks, there is a lack of consensus in the community as to what shared properties between languages enable such transfer.
-Analyses involving pairs of natural languages are often inconclusive and contradictory since languages simultaneously differ in many linguistic aspects.
-In this paper, we perform a large-scale empirical study to isolate the effects of various linguistic properties by measuring zero-shot transfer between four diverse natural languages and their counterparts constructed by modifying aspects such as the script, word order, and syntax.
-Among other things, our experiments show that the absence of sub-word overlap significantly affects zero-shot transfer when languages differ in their word order, and there is a strong correlation between transfer performance and word embedding alignment between languages (e.g., Spearman's R=0.94 on the task of NLI).
-Our results call for focus in multilingual models on explicitly improving word embedding alignment between languages rather than relying on its implicit emergence.
+Multilingual pre-trained models exhibit zeroshot cross-lingual transfer, where a model finetuned on a source language achieves surprisingly good performance on a target language. While studies have attempted to understand
+transfer, they focus only on MLM, and the large number of differences between natural languages makes it hard to disentangle the importance of different properties.
+In this paper, we specifically highlight the importance of word embedding alignment by proposing a pretraining objective (ALIGN-MLM) whose auxiliary loss guides similar words in different languages to have similar word embeddings.
+ALIGN-MLM either outperforms or matches three widely adopted objectives (MLM, XLM, DICT-MLM) when we evaluate transfer between pairs of natural languages and their counterparts created by systematically modifying specific properties like the script.
+We also show a strong correlation between alignment and transfer for all objectives (e.g., ρs = 0.727 for XNLI), which together with ALIGN-MLM’s strong performance calls for explicitly aligning word embeddings for multilingual models.
 
 <img src="resources/Approach.png">
 
@@ -23,8 +23,15 @@ Our results call for focus in multilingual models on explicitly improving word e
 
 1.  **Step 1:** Install from the conda `.yml` file.
 ``` bash
-conda env create -f installation/multilingual.yml
+$ conda env create -f installation/multilingual.yml
 ```
+  
+* If you receive the a `pip` error involving `torch 1.7.1+cu101`, then run the following command to resolve it
+
+``` bash
+$ pip install torch==1.7.1+cu101 torchvision==0.8.2+cu101 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+```
+
 2. **Step 2:** Install `transformers` in an editable way.
 ``` bash
 pip install -e transformers/
@@ -33,38 +40,53 @@ pip install -r transformers/examples/token-classification/requirements.txt
 ```
 
 ## Repository usage <a name="usage"></a>
-
-For the commands we used to get the reported numbers in the paper, [click here](#wb).
-[This file](Steps.md) contains common instructions used.
-[This file](run_experiments.py) can automatically generate commands for your use case.
+We study three kinds of transformations all models: _Transliteration_, _Inversion_, and _Syntax Transformation_. _Inversion_ and _Syntax Transformation_ corpora have already been generated, while _Transliteration_ is an option at runtime.
 
 ### Bilingual pre-training
-1. **For bilingual pre-training on original and derived language pairs**, use the flag `--invert_word_order` for the _Inversion_ transformation, `--permute_words` for _Permutation_  and `--one_to_one_mapping` for _Transliteration_. Example command for bilingual pre-training for English with _Inversion_ transformation to create the derived language pair.
+For all pretraining experiments, we use the transitive version of the scripts, because pass in two sources of input text: the original English corpus, as well as the inverted/syntax transformed corpus.
+
+1. **MLM**
+
+    Use the flag `--one_to_one_mapping` for the _Transliteration_ transformation.
+
 ``` bash
-nohup  python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_mlm_synthetic.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 50 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/pretrain_data/en/train.txt --validation_file ../../bucket/pretrain_data/en/valid.txt --output_dir ../../bucket/model_outputs/en/inverted_order_500K/mlm --run_name inverted_en_500K_mlm --invert_word_order --word_modification add &
+python transformers/examples/language-modeling/run_mlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 50 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file <english_train_corpus> --transitive_file <synthetic_train_corpus> --validation_file <validation_corpus> --output_dir <dir_to_store_model> --run_name <name_of_this_run> --one_to_one_mapping --word_modification replace
 ```
-1. **For _Syntax_ transformations**, the train file used in the following command (`synthetic_dep_train-fr~en@N~en@V.txt`) means that it is the concatenation of French corpus with French modified to English verb and noun order (`fr~en@N~en@V`).
+
+2. **XLM** <a name="xlm"></a>
+
+    Use the flag `--tlm_generation_rate` to control the amount of TLM data generated relative to MLM. If `--one_to_one_mapping` is selected, you can also use the flag `--one_to_one_file` to link to a file that contains explicit one to one mappings. Note this file can contain a mapping for only a subset of the vocabulary, which results in the two languages having vocabulary overlap. Example command below.
+
 ``` bash
-nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_mlm_synthetic.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 50 --overwrite_output_dir --model_type roberta --config_name config/fr/roberta_8/config.json --tokenizer_name config/fr/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/pretrain_data/fr/synthetic/synthetic_dep_train-fr~en@N~en@V.txt --validation_file ../../bucket/pretrain_data/fr/synthetic/synthetic_dep_valid-fr~en@N~en@V.txt --output_dir ../../bucket/model_outputs/fr/syntax_modif_en/mlm --run_name fr_syntax_modif_en_500K_mlm &
+python transformers/examples/language-modeling/run_tlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_tlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file <english_train_corpus> --train_synthetic_file <synthetic_train_corpus> --validation_file <english_validation_corpus> --validation_synthetic_file <synthetic_validation_corpus> --output_dir <dir_to_store_model> --run_name <name_of_this_run> --one_to_one_mapping --word_modification replace --tlm_generation_rate 0.25 --one_to_one_file <one_to_one_file>
 ```
-1. **For composed transformations**, apply multiple transformations by using multiple flags, e.g., `--one_to_one_mapping --invert_word_order`.
+
+3. **DICT-MLM**
+
+    Use the flag `--bilingual_rate` to control the percentage of tokens in the bilingual dictionary between the two languages. Example command below.
+
 ```bash
-nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_mlm_synthetic.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 50 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/pretrain_data/en/train.txt --validation_file ../../bucket/pretrain_data/en/valid.txt --output_dir ../../bucket/model_outputs/en/one_to_one_inverted/mlm --run_name en_one_to_one_inverted --one_to_one_mapping --invert_word_order --word_modification add &
+python transformers/examples/language-modeling/run_dictmlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 100 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_dictmlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file <english_train_corpus> --train_synthetic_file <synthetic_train_corpus> --validation_file <english_validation_corpus> --validation_synthetic_file <synthetic_validation_corpus> --output_dir <dir_to_store_model> --run_name <name_of_this_run> --one_to_one_mapping --word_modification replace --bilingual_rate 0.50
 ```
-1. **Using different domains for the _original_ and _derived_ language**.
+
+4. **Aligned-MLM**.
+
+    Use the flag `--alignment_loss_weight` to control the strength of the alignment loss during training. Example command below.
+
 ``` bash
-nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examples/language-modeling/run_mlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 50 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file ../../bucket/pretrain_data/en/train_split_1.txt --transitive_file ../../bucket/pretrain_data/en/train_split_2.txt --validation_file ../../bucket/pretrain_data/en/valid.txt --output_dir ../../bucket/model_outputs/en/one_to_one_diff_source_100_more_steps/mlm --run_name en_one_to_one_diff_source_100_more_steps --one_to_one_mapping --word_modification add &
+python transformers/examples/language-modeling/run_alignedmlm_synthetic_transitive.py --warmup_steps 10000 --learning_rate 1e-4 --save_steps -1 --max_seq_length 512 --logging_steps 50 --overwrite_output_dir --model_type roberta --config_name config/en/roberta_8/config_alignedmlm.json --tokenizer_name config/en/roberta_8/ --do_train --do_eval --max_steps 500000 --per_device_train_batch_size 16 --per_device_eval_batch_size 16 --train_file <english_train_corpus> --transitive_file <synthetic_train_corpus> --validation_file <validation_corpus> --output_dir <dir_to_store_model> --run_name <name_of_this_run> --one_to_one_mapping --word_modification replace --alignment_loss_weight 10 --bilingual_rate 0.50
 ```
 
-### Fine-tuning and evaluation
-[This directory](scripts) contains scripts used for downstream fine-tuning and evaluation.
-1. [Transliteration, Inversion, and Permutation](scripts/word_modification)
-1. [Syntax](scripts/syntax_modification)
-1. [Composed transformations](scripts/composition)
-1. [Using different domains for original and derived languages](scripts/diff_corpus_transliteration)
+### Finetuning and Zero-Shot Evaluation
+Finetuning and zero-shot evaluation are tested on three tasks: XNLI, NER, and POS. XNLI uses the  `run_glue_synthetic` scripts, while both NER and POS use `run_ner_synthetic` (but with different inputs and models to account for the different types of tags).
 
-### Embedding alignment
-[Use this script](analysis/learn_orthogonal_mapping_one_one.py) to calculate embedding alignment for any model which uses _Transliteration_ as one of the transformations.
+### Scripts for Data Generation, Pretraining, Finetuning, and Evaluation
+1. [This directory](preprocessing/corpus_inversion/) contains scripts used to invert pretraining and finetuning corpora.
+2. [This directory](scripts/alignedmlm_paper_experiments/) contains scripts used for downstream fine-tuning and evaluation.
+3. [This directory](analysis/alignedmlm_paper_analysis/) contains scripts used to analyze word embedding alignment between pairs of languages.
+4. [This directory](synthetic_language_files/word_based/configuration_files/) contains premade one-to-one mapping files with word overlap for use with XLM models. See [XLM](#XLM) for more information.
+5. For all other scripts, such as the data generation of the original English corpus, see [here](https://github.com/princeton-nlp/MultilingualAnalysis/tree/4c89a60ee7d038c4a94a470c1290e3eefa8a2b56).
+
 
 ## Data and models <a name="data"></a>
 [All the data](https://console.cloud.google.com/storage/browser/multilingual-1;tab=objects?forceOnBucketsSortingFiltering=false&authuser=1&project=attention-guidance&prefix=&forceOnObjectsSortingFiltering=false) used for our experiments, hosted on Google Cloud Bucket.
@@ -73,10 +95,12 @@ nohup python transformers/examples/xla_spawn.py --num_cores 8 transformers/examp
 1. Model files - [`model_outputs`](https://console.cloud.google.com/storage/browser/multilingual-1/model_outputs?pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&authuser=1&project=attention-guidance&prefix=&forceOnObjectsSortingFiltering=false)
 
 ## Links to experiments and results <a name="wb"></a>
-1. [Spreadsheets with run descriptions, commands, and weights and biases link](https://docs.google.com/spreadsheets/d/1dB3CyCI5xD8OtGey80OosJMxXYox7gTGZq5NkEoc5po/edit?usp=sharing)
-1. [Spreadsheet with all results](https://docs.google.com/spreadsheets/d/1aoemKW6c0HEF3IL_UZ1WnC9zgVAHS7KT3GqEqTrW9xU/edit?usp=sharing)
-1. [Links to pre-training runs](https://wandb.ai/ameet-1997/multilingual_synthetic?workspace=user-ameet-1997)
-1. [Link to fine-tuning and analysis](https://wandb.ai/ameet-1997/multilingual_synthetic_downstream?workspace=user-ameet-1997)
+[Spreadsheets with all results, and weights and biases links](https://docs.google.com/spreadsheets/d/1lBTfouNM_xNQnOvI4AXnIIaA8EPoHj5R5C5dJOdlzCM/edit?usp=sharing)
+
+## Training Environments
+The full models were trained on Google’s Cloud Compute platform. In particular, we utilized a 12 core vCPU VM with 96 GB of memory. The machine was associated with a Debian GNU/Linux 10 Buster + PyTorch/XLA bootdisk boot disk of 300 GB in size. We used v3-8 Google TPUs on Pytorch-1.11.
+
+The setup script can be found [here](scripts/tpu_gcloud_setup.sh).
 
 ## Citation <a name="wb"></a>
 Please consider citing if you used our paper in your work!

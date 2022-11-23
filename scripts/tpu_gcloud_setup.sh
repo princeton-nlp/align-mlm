@@ -3,7 +3,7 @@
 function SourceCodeAndInstall {
     mkdir source_code
     cd source_code
-    git clone https://github.com/henrytang1/MultilingualModelAnalysis.git
+    git clone https://github.com/princeton-nlp/align-mlm.git
     conda env list
     conda create --name multilingual --clone torch-xla-1.11
     conda activate multilingual
@@ -42,28 +42,6 @@ function MakeTPUs {
     export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
 }
 
-# TPU List
-############### h-exp-1 ###############
-# export TPU_IP_ADDRESS=10.23.248.106	
-############### h-exp-2 ###############
-# export TPU_IP_ADDRESS=10.56.28.98
-############### h-exp-3 ###############
-# export TPU_IP_ADDRESS=10.28.229.122
-############### h-exp-4 ###############
-# export TPU_IP_ADDRESS=10.123.235.234	
-############### h-exp-5 ###############
-# export TPU_IP_ADDRESS=10.86.170.138 # USED FOR MLM #
-############### h-exp-6 ###############
-# export TPU_IP_ADDRESS=10.127.27.178
-############### h-exp-7 ###############
-# export TPU_IP_ADDRESS=10.8.124.90
-############### h-exp-8 ###############
-# export TPU_IP_ADDRESS=10.45.131.210	
-############### h-exp-9 ###############
-# export TPU_IP_ADDRESS=10.83.156.66
-############### h-exp-10 ###############
-# export TPU_IP_ADDRESS=10.65.182.186
-
 function RestartVM {
     conda activate multilingual
     gcsfuse --implicit-dirs --debug_fuse multilingual-1  bucket/
@@ -73,16 +51,16 @@ function RestartVM {
     export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
     cd source_code/MultilingualModelAnalysis/
     git pull
-    export WANDB_API_KEY="X"
-    export WANDB_ENTITY="henrytang"
-    export WANDB_PROJECT="tlm_multilingual_synthetic"
+    export WANDB_API_KEY="INSERT_KEY_HERE"
+    export WANDB_ENTITY="INSERT_USERNAME"
+    export WANDB_PROJECT="INSERT_PROJECT_NAME"
 }
 
 function Wandb {
     # wandb login
-    export WANDB_API_KEY="X"
-    export WANDB_ENTITY="henrytang"
-    export WANDB_PROJECT="tlm_multilingual_synthetic"
+    export WANDB_API_KEY="INSERT_KEY_HERE"
+    export WANDB_ENTITY="INSERT_USERNAME"
+    export WANDB_PROJECT="INSERT_PROJECT_NAME"
     # export WANDB_NAME="wikitext_mlm"
     # Run name is specified using the --run_name argument
 }
