@@ -95,9 +95,8 @@ Finetuning and zero-shot evaluation are tested on three tasks: _XNLI_, _NER_, an
 1. Model files - [`model_outputs`](https://console.cloud.google.com/storage/browser/multilingual-1/model_outputs?pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&authuser=1&project=attention-guidance&prefix=&forceOnObjectsSortingFiltering=false)
 
 ## Links to experiments and results <a name="wb"></a>
-[Spreadsheets with all results, and weights and biases links](https://docs.google.com/spreadsheets/d/1lBTfouNM_xNQnOvI4AXnIIaA8EPoHj5R5C5dJOdlzCM/edit?usp=sharing)
+[Here](https://docs.google.com/spreadsheets/d/1lBTfouNM_xNQnOvI4AXnIIaA8EPoHj5R5C5dJOdlzCM/edit?usp=sharing) is the spreadsheet with all results, and weights and biases links.
 
-## Training Environments
 The full models were trained on Google’s Cloud Compute platform. In particular, we utilized a 12 core vCPU VM with 96 GB of memory. The machine was associated with a Debian GNU/Linux 10 Buster + PyTorch/XLA bootdisk boot disk of 300 GB in size. We used v3-8 Google TPUs on Pytorch-1.11.
 
 The setup script can be found [here](scripts/tpu_gcloud_setup.sh).
