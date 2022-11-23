@@ -85,7 +85,7 @@ Finetuning and zero-shot evaluation are tested on three tasks: _XNLI_, _NER_, an
 2. [This directory](scripts/alignedmlm_paper_experiments/) contains scripts used for downstream fine-tuning and evaluation.
 3. [This directory](analysis/alignedmlm_paper_analysis/) contains scripts used to analyze word embedding alignment between pairs of languages.
 4. [This directory](synthetic_language_files/word_based/configuration_files/) contains premade one-to-one mapping files with word overlap for use with XLM models. See [XLM](#XLM) for more information.
-5. For all other scripts, such as the data generation of the original English corpus, see [here](https://github.com/princeton-nlp/MultilingualAnalysis/tree/4c89a60ee7d038c4a94a470c1290e3eefa8a2b56).
+5. For all other scripts, such as the data generation of the original English corpus, see [here](https://github.com/princeton-nlp/MultilingualAnalysis).
 
 
 ## Data and models <a name="data"></a>
