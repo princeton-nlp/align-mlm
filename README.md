@@ -16,7 +16,9 @@ In this paper, we specifically highlight the importance of word embedding alignm
 **ALIGN-MLM** either outperforms or matches three widely adopted objectives (**MLM**, **XLM**, **DICT-MLM**) when we evaluate transfer between pairs of natural languages and their counterparts created by systematically modifying specific properties like the script.
 We also show a strong correlation between alignment and transfer for all objectives (e.g., ρs = 0.727 for _XNLI_), which together with **ALIGN-MLM**’s strong performance calls for explicitly aligning word embeddings for multilingual models.
 
-<img src="resources/alignmlm_performance.png">
+<p align="center" width="100%">
+<img src="resources/alignmlm_performance.png" width=350>
+</p>
 
 ## Installation instructions <a name="installation"></a>
 
