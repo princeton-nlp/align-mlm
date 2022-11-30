@@ -6,7 +6,6 @@ This repository contains code for our paper titled ["ALIGN-MLM: Word Embedding A
 1. [Paper in a nutshell](#nutshell)
 1. [Installation](#installation)
 1. [Repository usage](#usage)
-1. [Data and models](#data)
 1. [Links to experiments and results](#wb)
 1. [Citation](#citation)
 
@@ -17,7 +16,7 @@ In this paper, we specifically highlight the importance of word embedding alignm
 **ALIGN-MLM** either outperforms or matches three widely adopted objectives (**MLM**, **XLM**, **DICT-MLM**) when we evaluate transfer between pairs of natural languages and their counterparts created by systematically modifying specific properties like the script.
 We also show a strong correlation between alignment and transfer for all objectives (e.g., ρs = 0.727 for _XNLI_), which together with **ALIGN-MLM**’s strong performance calls for explicitly aligning word embeddings for multilingual models.
 
-<img src="resources/Approach.png">
+<img src="resources/alignmlm_performance.png">
 
 ## Installation instructions <a name="installation"></a>
 
@@ -87,13 +86,6 @@ Finetuning and zero-shot evaluation are tested on three tasks: _XNLI_, _NER_, an
 4. [This directory](synthetic_language_files/word_based/configuration_files/) contains premade one-to-one mapping files with word overlap for use with XLM models. See [XLM](#XLM) for more information.
 5. For all other scripts, such as the data generation of the original English corpus, see [here](https://github.com/princeton-nlp/MultilingualAnalysis).
 
-
-## Data and models <a name="data"></a>
-[All the data](https://console.cloud.google.com/storage/browser/multilingual-1;tab=objects?forceOnBucketsSortingFiltering=false&authuser=1&project=attention-guidance&prefix=&forceOnObjectsSortingFiltering=false) used for our experiments, hosted on Google Cloud Bucket.
-1. Pre-training data - [`pretrain_data`](https://console.cloud.google.com/storage/browser/multilingual-1/pretrain_data?authuser=1&project=attention-guidance&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false)
-1. Downstream data - [`supervised_data`](https://console.cloud.google.com/storage/browser/multilingual-1/supervised_data?authuser=1&project=attention-guidance&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false)
-1. Model files - [`model_outputs`](https://console.cloud.google.com/storage/browser/multilingual-1/model_outputs?pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&authuser=1&project=attention-guidance&prefix=&forceOnObjectsSortingFiltering=false)
-
 ## Links to experiments and results <a name="wb"></a>
 [Here](https://docs.google.com/spreadsheets/d/1lBTfouNM_xNQnOvI4AXnIIaA8EPoHj5R5C5dJOdlzCM/edit?usp=sharing) is the spreadsheet with all results, and weights and biases links.
 
@@ -105,10 +97,10 @@ The setup script can be found [here](scripts/tpu_gcloud_setup.sh).
 Please consider citing if you used our paper in your work!
 
 ```
-@article{deshpande2021bert,
-  title={When is BERT Multilingual? Isolating Crucial Ingredients for Cross-lingual Transfer},
-  author={Deshpande, Ameet and Talukdar, Partha and Narasimhan, Karthik},
-  journal={arXiv preprint arXiv:2110.14782},
-  year={2021}
+@article{tang2022align,
+  title={ALIGN-MLM: Word Embedding Alignment is Crucial for Multilingual Pre-training},
+  author={Tang, Henry and Deshpande, Ameet and Narasimhan, Karthik},
+  journal={arXiv preprint arXiv:2211.08547},
+  year={2022}
 }
 ```
