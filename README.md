@@ -17,7 +17,7 @@ In this paper, we specifically highlight the importance of word embedding alignm
 We also show a strong correlation between alignment and transfer for all objectives (e.g., ρs = 0.727 for _XNLI_), which together with **ALIGN-MLM**’s strong performance calls for explicitly aligning word embeddings for multilingual models.
 
 <p align="center" width="100%">
-<img src="resources/alignmlm_performance.png" width=350>
+<img src="resources/alignmlm_performance.png" width=450>
 </p>
 
 ## Installation instructions <a name="installation"></a>
